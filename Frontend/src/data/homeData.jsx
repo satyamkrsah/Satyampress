@@ -1,21 +1,33 @@
 export const heroSlides = [
   {
-    image: 'https://www.parekhcards.com/pub/media/codazon/slideshow/h/o/home-slide-2.jpg',
+    image: 'https://jimitcard.com/wp-content/uploads/2026/05/Gemini_Generated_Image_xx5pj0xx5pj0xx5p.png',
     title1: 'Every Celebration',
     title2: 'Starts Here',
     subtitle: 'Premium Printing Under One Roof',
   },
   {
-    image: 'https://images.unsplash.com/photo-1606214532582-7f99ff95d6cb?auto=format&fit=crop&q=80&w=2000',
+    image: 'https://goldleaf.co.in/wp-content/uploads/2018/02/Rajiv-Sara-01-Invitation-Invitations-India-Handcrafted-Laser-Cut-Work-Card-Collection-By-Gold-Leaf-Design-Studios-New-Delhi.jpg',
+    title1: 'Premium',
+    title2: 'Wedding Cards',
+    subtitle: 'Elegant invitations crafted for your special day.',
+  },
+  {
+    image: 'https://kalakriticards.in/images/slider15.jpg',
     title1: 'Luxury Laser Cut',
     title2: 'Wedding Invitations',
     subtitle: 'Intricately designed elegant wedding cards.',
   },
   {
-    image: 'https://images.unsplash.com/photo-1589332961819-01257d0793df?auto=format&fit=crop&q=80&w=2000',
+    image: 'https://sevencolourscard.com/wp-content/uploads/2025/09/F51P.jpg',
+    title1: 'Celebrate Every',
+    title2: 'Sacred Union',
+    subtitle: 'Premium wedding invitations crafted with elegance.',
+  },
+  {
+    image: 'https://static.vecteezy.com/system/resources/previews/014/825/374/non_2x/professional-business-stationery-items-set-black-orange-modern-color-styles-illustration-eps-vector.jpg',
     title1: 'Professional',
     title2: 'Business Stationery',
-    subtitle: 'Leave a lasting corporate impression.',
+    subtitle: 'Premium office stationery for modern businesses.',
   },
 ];
 
@@ -27,22 +39,22 @@ export const homeCategories = [
   },
   {
     name: 'Business Printing',
-    image: 'https://images.unsplash.com/photo-1589332961819-01257d0793df?auto=format&fit=crop&q=80&w=800',
+    image: 'https://3.imimg.com/data3/LY/CJ/MY-11995425/commercial-printing-500x500.jpg',
     description: 'Visiting cards, letterheads & more',
   },
   {
     name: 'Advertising Printing',
-    image: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&q=80&w=800',
+    image: 'https://5.imimg.com/data5/SELLER/Default/2025/8/538560406/NJ/LO/SW/143293172/digital-printing-services-500x500.png',
     description: 'Flex banners, standees & signage',
   },
   {
     name: 'Digital Printing',
-    image: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?auto=format&fit=crop&q=80&w=800',
+    image: 'https://homafy.com/wp-content/uploads/2023/01/customized-e-card.jpeg',
     description: 'Digital invitations & e-cards',
   },
   {
     name: 'Custom Printing',
-    image: 'https://images.unsplash.com/photo-1606214532582-7f99ff95d6cb?auto=format&fit=crop&q=80&w=800',
+    image: 'https://dtfvirginia.com/cdn/shop/articles/DTF_Printing_Service_for_Small_Business-8101896_ab92b780-4a5f-4277-8516-df6ff727844f-7240341.jpg?v=1775039365',
     description: 'Foil, emboss & bespoke designs',
   },
 ];

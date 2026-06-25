@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail } from 'lucide-react';
+import logo from '../assets/satyam4.svg';
 
 const Footer = () => {
   return (
     <footer className="bg-black text-white pt-16 pb-8">
-      <div className="border-b border-white/10">
+      {/* <div className="border-b border-white/10">
         <div className="w-full px-4 sm:px-8 lg:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-white font-serif text-xl md:text-2xl mb-1">Stay Connected</h3>
@@ -22,15 +23,18 @@ const Footer = () => {
             </button>
           </form>
         </div>
-      </div>
+      </div> */}
 
       <div className="w-full px-4 sm:px-8 lg:px-12 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           <div>
             <div className="mb-6">
-              <span className="font-serif text-2xl font-semibold text-white tracking-wide">SATYAM</span>
-              <p className="text-[10px] font-medium tracking-[0.3em] text-gold uppercase mt-1">Printing Press</p>
-            </div>
+  <img
+    src={logo}
+    alt="Satyam Printing Press"
+    className="h-16 md:h-20 w-auto"
+  />
+</div>
             <p className="text-white/80 text-sm leading-relaxed mb-6">
               All printing solutions under one roof. Premium wedding cards, business stationery, and custom printing since 1995.
             </p>

@@ -7,6 +7,7 @@ import ProductCarousel from '../components/ProductCarousel';
 import ProductCard from '../components/ProductCard';
 import ProcessSteps from '../components/ProcessSteps';
 import TestimonialsSection from '../components/TestimonialsSection';
+import ImageComparisonSlider from '../components/ImageComparisonSlider';
 import { heroSlides, homeCategories, curatedCollections, priceRanges } from '../data/homeData';
 
 const Home = () => {
@@ -15,10 +16,16 @@ const Home = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
+    console.log("Interval Running...");
+    
+    setCurrentSlide((prev) => {
+      console.log("Previous:", prev);
+      return (prev + 1) % heroSlides.length;
+    });
+  }, 6000);
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div className="flex flex-col bg-white dark:bg-background-dark transition-colors duration-300">
@@ -143,34 +150,46 @@ const Home = () => {
 
       {/* Curated Collections */}
       <section className="py-16 md:py-24 bg-white dark:bg-background-dark transition-colors duration-300">
-        <div className="w-full px-4 sm:px-8 lg:px-12">
-          <div className="text-center mb-14">
+        <div className="w-full px-4 sm:px-8 lg:px-12 mb-14">
+          <div className="text-center">
             <p className="section-subheading mb-3">Curated</p>
             <h2 className="section-heading">Curated for Grand Celebrations</h2>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {curatedCollections.map((item) => (
-              <Link
-                key={item.title}
-                to={item.link}
-                className="group relative aspect-[16/9] md:aspect-[2/1] overflow-hidden"
-              >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                  <h3 className="text-2xl md:text-3xl font-serif text-white mb-2">{item.title}</h3>
-                  <p className="text-white text-sm mb-4">{item.subtitle}</p>
-                  <span className="text-gold text-sm uppercase tracking-wider inline-flex items-center gap-2 group-hover:gap-3 transition-all">
-                    Explore <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
-              </Link>
-            ))}
+        <div className="w-full px-4 sm:px-8 lg:px-12">
+          <div className="w-full rounded-2xl overflow-hidden shadow-2xl border-2 border-gold/60">
+            {curatedCollections.length >= 2 ? (
+              <ImageComparisonSlider 
+                item1={curatedCollections[0]} 
+                item2={curatedCollections[1]} 
+              />
+            ) : (
+            // Fallback just in case
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 sm:px-8 lg:px-12">
+              {curatedCollections.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.link}
+                  className="group relative h-[70vh] md:h-[80vh] overflow-hidden"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                    <h3 className="text-2xl md:text-3xl font-serif text-white mb-2">{item.title}</h3>
+                    <p className="text-white text-sm mb-4">{item.subtitle}</p>
+                    <span className="text-gold text-sm uppercase tracking-wider inline-flex items-center gap-2 group-hover:gap-3 transition-all">
+                      Explore <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
           </div>
         </div>
       </section>
@@ -206,22 +225,38 @@ const Home = () => {
             <h2 className="section-heading">Premium Collection</h2>
           </div>
 
-          <div className="product-grid">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {premiumCollection.slice(0, 5).map((product) => (
-              <Link key={product.id} to={`/product/${product.id}`} className="group">
-                <div className="aspect-square overflow-hidden bg-white dark:bg-black border border-black dark:border-white dark:border-black dark:border-white mb-3 transition-colors duration-300">
+              <Link 
+                key={product.id} 
+                to={`/product/${product.id}`} 
+                className="group relative bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-transparent hover:border-gold/40 hover:shadow-[0_10px_40px_rgba(212,175,55,0.15)] transition-all duration-500 hover:-translate-y-2 flex flex-col"
+              >
+                <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-black relative">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
+                  {/* Subtle overlay on hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
+                  
+                  {/* View Details text that slides up */}
+                  <div className="absolute bottom-0 left-0 right-0 py-3 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-center">
+                    <span className="text-white text-xs uppercase tracking-[0.2em] font-medium">View Details</span>
+                  </div>
                 </div>
-                <h3 className="font-serif text-sm text-black dark:text-cream-dark group-hover:text-gold transition-colors line-clamp-2">
-                  {product.name}
-                </h3>
-                <p className="text-gold font-semibold text-sm mt-1">
-                  ₹{product.price.toLocaleString('en-IN')}
-                </p>
+                
+                <div className="p-5 flex flex-col flex-grow items-center text-center bg-white dark:bg-[#121212]">
+                  <h3 className="font-serif text-sm md:text-base text-black dark:text-cream-dark group-hover:text-gold transition-colors line-clamp-2 mb-2 leading-snug">
+                    {product.name}
+                  </h3>
+                  <div className="mt-auto w-full pt-3 border-t border-black/5 dark:border-white/5">
+                    <p className="text-gold font-semibold text-sm md:text-base tracking-wide">
+                      ₹{product.price.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
