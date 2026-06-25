@@ -1,0 +1,7 @@
+export const businessPrinting = [
+  { id: 'b1', name: 'Matte Finish Visiting Cards', category: 'Business Printing', price: 2, rating: 4.5, reviews: 340, image: 'https://cms.cloudinary.vpsvc.com/image/upload/if_ar_gt_1.1/c_scale,t_pdpHeroGallery_Gallery/if_else/c_scale,w_816/if_end/f_auto,q_auto:best,dpr_1.0/India%20LOB/visiting-cards/Non-Tearable%20Visiting%20Cards/IN_Non-Tearable-Visiting-Cards_Hero-image_01' },
+  { id: 'b2', name: 'Executive Letterheads', category: 'Business Printing', price: 5, rating: 4.6, reviews: 156, image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=600' },
+  { id: 'b3', name: 'Custom Bill Books (Duplicate)', category: 'Business Printing', price: 150, rating: 4.4, reviews: 88, image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=600' },
+  { id: 'b4', name: 'Corporate Envelopes', category: 'Business Printing', price: 3, rating: 4.7, reviews: 112, image: 'https://images.unsplash.com/photo-1577563908411-50cb98976fea?auto=format&fit=crop&q=80&w=600' },
+  { id: 'b5', name: 'Premium PVC ID Cards', category: 'Business Printing', price: 50, rating: 4.8, reviews: 230, image: 'https://cms.cloudinary.vpsvc.com/image/upload/if_ar_gt_1.1/c_scale,t_pdpHeroGallery_Gallery/if_else/c_scale,w_816/if_end/f_auto,q_auto:best,dpr_1.0/India%20LOB/visiting-cards/Non-Tearable%20Visiting%20Cards/IN_Non-Tearable-Visiting-Cards_Hero-image_01' },
+];
