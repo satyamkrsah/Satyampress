@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, Search, X } from 'lucide-react';
+import { Filter, Search, X, Loader2 } from 'lucide-react';
 import { useProduct } from '../context/ProductContext';
 import ProductCard from '../components/ProductCard';
 import { priceRanges } from '../data/homeData';
@@ -16,6 +16,8 @@ const Products = () => {
     priceRange,
     setPriceRange,
     filteredProducts,
+    loading,
+    error,
   } = useProduct();
 
   useEffect(() => {
@@ -122,32 +124,44 @@ const Products = () => {
           </div>
 
           <div className="flex-grow">
-            <div className="mb-6 text-sm text-black dark:text-white">
-              Showing {filteredProducts.length} products
-            </div>
-
-            {filteredProducts.length > 0 ? (
-              <div className="product-grid">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-10 w-10 text-gold animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 text-red-500 p-6 rounded-lg text-center">
+                Error loading products: {error}
               </div>
             ) : (
-              <div className="bg-white dark:bg-background-dark transition-colors duration-300 p-16 text-center border border-black dark:border-white dark:border-black dark:border-white transition-colors duration-300">
-                <Search className="h-10 w-10 text-black dark:text-white mx-auto mb-4" />
-                <h3 className="font-serif text-xl text-black dark:text-cream-dark mb-2">No products found</h3>
-                <p className="text-black dark:text-white mb-6 text-sm">Try adjusting your search or filters.</p>
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setPriceRange(null);
-                    setSelectedCategory('All');
-                  }}
-                  className="btn-outline inline-block text-sm"
-                >
-                  Clear Filters
-                </button>
-              </div>
+              <>
+                <div className="mb-6 text-sm text-black dark:text-white">
+                  Showing {filteredProducts.length} products
+                </div>
+
+                {filteredProducts.length > 0 ? (
+                  <div className="product-grid">
+                    {filteredProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-background-dark transition-colors duration-300 p-16 text-center border border-black dark:border-white dark:border-black dark:border-white transition-colors duration-300">
+                    <Search className="h-10 w-10 text-black dark:text-white mx-auto mb-4" />
+                    <h3 className="font-serif text-xl text-black dark:text-cream-dark mb-2">No products found</h3>
+                    <p className="text-black dark:text-white mb-6 text-sm">Try adjusting your search or filters.</p>
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setPriceRange(null);
+                        setSelectedCategory('All');
+                      }}
+                      className="btn-outline inline-block text-sm"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

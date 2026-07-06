@@ -1,0 +1,73 @@
+openapi: 3.0.0
+info:
+  title: Satyam Printing Press API
+  description: API documentation for the Satyam Printing Press Management System
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      summary: Login user
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+        '401':
+          description: Invalid credentials
+  /products:
+    get:
+      summary: Get all products
+      tags:
+        - Products
+      security: []
+      responses:
+        '200':
+          description: List of products
+  /orders:
+    post:
+      summary: Create a new order
+      tags:
+        - Orders
+      responses:
+        '201':
+          description: Order created
+  /payments/verify:
+    post:
+      summary: Verify Razorpay Payment Signature
+      tags:
+        - Payments
+      responses:
+        '200':
+          description: Payment verified

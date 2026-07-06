@@ -36,7 +36,7 @@ const Footer = () => {
   />
 </div>
             <p className="text-white/80 text-sm leading-relaxed mb-6">
-              All printing solutions under one roof. Premium wedding cards, business stationery, and custom printing since 1995.
+              All printing solutions under one roof. Premium wedding cards, business stationery, and custom printing since 2010.
             </p>
             <div className="flex gap-3">
               <a href="https://www.youtube.com/@SPPGB" className="h-9 w-9 border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors text-xs font-bold text-white">

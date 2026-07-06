@@ -1,0 +1,43 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: |
+          Frontend/package-lock.json
+          backend/package-lock.json
+
+    - name: Install Frontend Dependencies
+      run: cd Frontend && npm ci
+
+    - name: Build Frontend
+      run: cd Frontend && npm run build
+
+    - name: Install Backend Dependencies
+      run: cd backend && npm ci
+
+    - name: Run Backend Tests
+      run: cd backend && npm test
+      env:
+        NODE_ENV: test
+        JWT_SECRET: testsecret
+        MONGO_URI: mongodb://localhost:27017/testdb

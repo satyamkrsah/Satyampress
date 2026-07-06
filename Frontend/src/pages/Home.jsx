@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useProduct } from '../context/ProductContext';
 import ProductCarousel from '../components/ProductCarousel';
 import ProductCard from '../components/ProductCard';
@@ -29,6 +30,13 @@ const Home = () => {
 
   return (
     <div className="flex flex-col bg-white dark:bg-background-dark transition-colors duration-300">
+      <Helmet>
+        <title>Satyam Printing Press | Premium Printing Solutions</title>
+        <meta name="description" content="Professional printing services for businesses and individuals. Business cards, flyers, banners, and more." />
+        <meta name="keywords" content="printing, business cards, flyers, offset printing, digital printing" />
+        <link rel="canonical" href="https://satyampress.com/" />
+      </Helmet>
+
       {/* Hero */}
       <section className="relative h-[70vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
         {heroSlides.map((slide, index) => (

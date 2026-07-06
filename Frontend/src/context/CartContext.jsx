@@ -1,64 +1,145 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import api from '../api/axios';
+import { useAuth } from './AuthContext';
+import { toast } from 'react-hot-toast';
 
 const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cart, setCart] = useState({ items: [], subTotal: 0, taxTotal: 0, shippingTotal: 0, discountTotal: 0, grandTotal: 0, coupon: null });
+  const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
 
-  const addToCart = (product, quantity = 1) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
-        );
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      setCart({ items: [], subTotal: 0, taxTotal: 0, shippingTotal: 0, discountTotal: 0, grandTotal: 0, coupon: null });
+    }
+  }, [isAuthenticated]);
+
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/cart');
+      if (res.data.success && res.data.data) {
+        setCart(res.data.data);
       }
-      return [...prev, { ...product, quantity }];
-    });
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
+  const addToCart = async (product, quantity = 1, customizations = {}, price, designFile = '', specialInstructions = '') => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
       return;
     }
-    setCartItems(prev => 
-      prev.map(item => item.id === productId ? { ...item, quantity } : item)
-    );
+    
+    try {
+      const res = await api.post('/cart/add', {
+        product: product.id || product._id,
+        quantity,
+        price: price || product.price,
+        customizations,
+        designFile,
+        specialInstructions
+      });
+      
+      if (res.data.success) {
+        setCart(res.data.data);
+        toast.success('Added to cart');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to add to cart');
+    }
   };
 
-  const clearCart = () => setCartItems([]);
+  const removeFromCart = async (itemId) => {
+    try {
+      const res = await api.delete(`/cart/${itemId}`);
+      if (res.data.success) {
+        setCart(res.data.data);
+        toast.success('Item removed');
+      }
+    } catch (error) {
+      toast.error('Failed to remove item');
+    }
+  };
 
+  const updateQuantity = async (itemId, quantity) => {
+    if (quantity <= 0) {
+      removeFromCart(itemId);
+      return;
+    }
+    
+    try {
+      const res = await api.put(`/cart/${itemId}`, { quantity });
+      if (res.data.success) {
+        setCart(res.data.data);
+      }
+    } catch (error) {
+      toast.error('Failed to update quantity');
+    }
+  };
+
+  const applyCoupon = async (code) => {
+    try {
+      const res = await api.post('/cart/coupon', { code });
+      if (res.data.success) {
+        setCart(res.data.data);
+        toast.success('Coupon applied!');
+        return true;
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to apply coupon');
+      return false;
+    }
+  };
+
+  const removeCoupon = async () => {
+    try {
+      const res = await api.post('/cart/coupon', { code: null });
+      if (res.data.success) {
+        setCart(res.data.data);
+        toast.success('Coupon removed');
+      }
+    } catch (error) {
+      toast.error('Failed to remove coupon');
+    }
+  };
+
+  const clearCart = () => setCart({ items: [], subTotal: 0, taxTotal: 0, shippingTotal: 0, discountTotal: 0, grandTotal: 0, coupon: null });
+
+  // Map backend cart structure to frontend expected structure for easier migration
   const cartSummary = useMemo(() => {
-    const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    const gstRate = 0.18; // 18% GST
-    const gstAmount = subtotal * gstRate;
-    const deliveryCharge = subtotal > 1000 || cartItems.length === 0 ? 0 : 50;
-    const total = subtotal + gstAmount + deliveryCharge;
-
     return {
-      subtotal,
-      gstAmount,
-      deliveryCharge,
-      total,
-      itemCount: cartItems.reduce((count, item) => count + item.quantity, 0)
+      subtotal: cart.subTotal || 0,
+      gstAmount: cart.taxTotal || 0,
+      deliveryCharge: cart.shippingTotal || 0,
+      discount: cart.discountTotal || 0,
+      total: cart.grandTotal || 0,
+      itemCount: cart.items ? cart.items.reduce((count, item) => count + item.quantity, 0) : 0
     };
-  }, [cartItems]);
+  }, [cart]);
 
   return (
     <CartContext.Provider value={{
-      cartItems,
+      cartItems: cart.items || [],
+      cartData: cart,
+      loading,
       addToCart,
       removeFromCart,
       updateQuantity,
+      applyCoupon,
+      removeCoupon,
       clearCart,
-      cartSummary
+      cartSummary,
+      fetchCart
     }}>
       {children}
     </CartContext.Provider>

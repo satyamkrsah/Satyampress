@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { motion } from 'framer-motion';
 
 const Cart = () => {
-  const { cartItems, removeFromCart, updateQuantity, cartSummary } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, cartSummary, loading } = useCart();
 
   if (cartItems.length === 0) {
     return (
@@ -22,6 +22,14 @@ const Cart = () => {
             Start Shopping
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-white dark:bg-background-dark transition-colors duration-300 py-10 px-4 text-center">
+        <p>Loading cart...</p>
       </div>
     );
   }
@@ -43,9 +51,11 @@ const Cart = () => {
               </div>
 
               <ul className="divide-y divide-gray-100">
-                {cartItems.map((item) => (
+                {cartItems.map((item) => {
+                  const product = item.product || {};
+                  return (
                   <motion.li
-                    key={item.id}
+                    key={item._id}
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -53,34 +63,39 @@ const Cart = () => {
                   >
                     <div className="col-span-1 sm:col-span-6 flex gap-4">
                       <div className="h-20 w-20 shrink-0 overflow-hidden bg-white dark:bg-black transition-colors duration-300 border border-black dark:border-white dark:border-black dark:border-white transition-colors duration-300">
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        <img src={product.images ? product.images[0] : (product.image || 'no-photo.jpg')} alt={product.name} className="h-full w-full object-cover" />
                       </div>
                       <div className="flex flex-col justify-center">
-                        <span className="text-xs text-gold uppercase tracking-wider mb-1">{item.category}</span>
-                        <Link to={`/product/${item.id}`} className="font-serif text-black dark:text-cream-dark hover:text-gold transition-colors line-clamp-2">
-                          {item.name}
+                        <span className="text-xs text-gold uppercase tracking-wider mb-1">{product.category?.name || product.category}</span>
+                        <Link to={`/product/${product._id}`} className="font-serif text-black dark:text-cream-dark hover:text-gold transition-colors line-clamp-2">
+                          {product.name}
                         </Link>
+                        {item.customizations && Object.keys(item.customizations).length > 0 && (
+                          <div className="text-xs text-black dark:text-white mt-1 opacity-70">
+                            {Object.values(item.customizations).filter(Boolean).join(', ')}
+                          </div>
+                        )}
                         <div className="sm:hidden font-semibold text-gold mt-2">
-                          ₹{item.price.toLocaleString('en-IN')}
+                          ₹{item.price?.toLocaleString('en-IN')}
                         </div>
                       </div>
                     </div>
 
                     <div className="hidden sm:block col-span-2 text-center font-semibold text-gold">
-                      ₹{item.price.toLocaleString('en-IN')}
+                      ₹{item.price?.toLocaleString('en-IN')}
                     </div>
 
                     <div className="col-span-1 sm:col-span-3 flex justify-start sm:justify-center items-center">
                       <div className="flex items-center border border-black dark:border-white dark:border-black dark:border-white transition-colors duration-300 h-10">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item._id, item.quantity - 1)}
                           className="px-3 text-black dark:text-white hover:text-gold h-full"
                         >
                           -
                         </button>
                         <span className="w-8 text-center font-semibold">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item._id, item.quantity + 1)}
                           className="px-3 text-black dark:text-white hover:text-gold h-full"
                         >
                           +
@@ -90,7 +105,7 @@ const Cart = () => {
 
                     <div className="absolute sm:relative top-5 right-5 sm:top-auto sm:right-auto sm:col-span-1 text-right">
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item._id)}
                         className="text-black dark:text-white hover:text-black dark:hover:text-white transition-colors p-2"
                         title="Remove item"
                       >
@@ -98,7 +113,7 @@ const Cart = () => {
                       </button>
                     </div>
                   </motion.li>
-                ))}
+                )})}
               </ul>
             </div>
           </div>
@@ -140,9 +155,9 @@ const Cart = () => {
 
               <p className="text-xs text-black dark:text-white text-center mb-6">Free delivery on orders above ₹1,000</p>
 
-              <button className="btn-primary w-full flex items-center justify-center gap-2 h-12 mb-4">
+              <Link to="/checkout" className="btn-primary w-full flex items-center justify-center gap-2 h-12 mb-4">
                 Proceed to Checkout <ArrowRight className="h-4 w-4" />
-              </button>
+              </Link>
 
               <div className="flex items-center justify-center gap-2 text-xs text-black dark:text-white">
                 <ShieldCheck className="h-4 w-4 text-gold" />
