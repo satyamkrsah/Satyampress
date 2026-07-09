@@ -142,11 +142,18 @@ const Home = () => {
             </Link>
           </div>
 
-          <div className="product-grid">
-            {products.slice(0, 10).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {products.length > 0 ? (
+            <div className="product-grid">
+              {products.slice(0, 10).map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-black p-12 text-center border border-black dark:border-white">
+              <h3 className="text-xl font-serif text-black dark:text-cream-dark mb-2">No Products Available</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Check back later for new additions to our catalogue.</p>
+            </div>
+          )}
           
           <div className="text-center mt-10 sm:hidden">
             <Link to="/products" className="btn-outline inline-block text-sm">
@@ -236,8 +243,8 @@ const Home = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {premiumCollection.slice(0, 5).map((product) => (
               <Link 
-                key={product.id} 
-                to={`/product/${product.id}`} 
+                key={product._id} 
+                to={`/product/${product._id}`} 
                 className="group relative bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-transparent hover:border-gold/40 hover:shadow-[0_10px_40px_rgba(212,175,55,0.15)] transition-all duration-500 hover:-translate-y-2 flex flex-col"
               >
                 <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-black relative">

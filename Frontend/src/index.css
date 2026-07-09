@@ -49,6 +49,45 @@
   .glass {
     @apply bg-white/60 dark:bg-black/95 backdrop-blur-md border-b border-white/20 dark:border-white/10 shadow-sm;
   }
+
+  /* Admin Panel Scoped Typography and Form Fixes */
+  .admin-panel input, 
+  .admin-panel textarea, 
+  .admin-panel select {
+    @apply bg-white dark:bg-black;
+  }
+  
+  /* Force override cached tailwind colors that are stuck as transparent white */
+  .admin-panel .text-gray-900,
+  .admin-panel h1, .admin-panel h2, .admin-panel h3, .admin-panel h4, .admin-panel h5, .admin-panel h6,
+  .admin-panel td {
+    color: #171717 !important;
+  }
+  
+  .admin-panel .text-gray-800 {
+    color: #262626 !important;
+  }
+  
+  .admin-panel .text-gray-700,
+  .admin-panel label {
+    color: #404040 !important;
+  }
+  
+  /* Dark mode overrides */
+  .dark .admin-panel .text-gray-900,
+  .dark .admin-panel h1, .dark .admin-panel h2, .dark .admin-panel h3, .dark .admin-panel h4, .dark .admin-panel h5, .dark .admin-panel h6,
+  .dark .admin-panel td {
+    color: #FAFAFA !important;
+  }
+  
+  .dark .admin-panel .text-gray-800 {
+    color: #E5E5E5 !important;
+  }
+  
+  .dark .admin-panel .text-gray-700,
+  .dark .admin-panel label {
+    color: #D4D4D4 !important;
+  }
 }
 
 ::-webkit-scrollbar {

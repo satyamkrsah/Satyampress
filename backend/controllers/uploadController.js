@@ -65,7 +65,24 @@ exports.uploadFile = async (req, res, next) => {
 
   } catch (err) {
     console.error('Upload Error:', err);
-    res.status(500).json({ success: false, error: 'Failed to upload file' });
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Get current user's media files
+// @route   GET /api/upload/myuploads
+// @access  Private
+exports.getMyMediaFiles = async (req, res) => {
+  try {
+    const files = await Media.find({ uploadedBy: req.user.id }).sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      count: files.length,
+      data: files
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
   }
 };
 

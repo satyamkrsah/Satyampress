@@ -5,10 +5,12 @@ const Product = require('../models/Product');
 // @access  Public
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find().populate({
-      path: 'category',
-      select: 'name description'
-    });
+    const products = await Product.find()
+      .populate({
+        path: 'category',
+        select: 'name description'
+      })
+      .populate('thumbnail gallery pdfSample', 'secureUrl originalName');
 
     res.status(200).json({
       success: true,
@@ -25,10 +27,12 @@ exports.getProducts = async (req, res, next) => {
 // @access  Public
 exports.getProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id).populate({
-      path: 'category',
-      select: 'name description'
-    });
+    const product = await Product.findById(req.params.id)
+      .populate({
+        path: 'category',
+        select: 'name description'
+      })
+      .populate('thumbnail gallery pdfSample', 'secureUrl originalName');
 
     if (!product) {
       return res.status(404).json({ success: false, error: 'Product not found' });

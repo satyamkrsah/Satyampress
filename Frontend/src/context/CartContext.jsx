@@ -34,7 +34,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (product, quantity = 1, customizations = {}, price, designFile = '', specialInstructions = '') => {
+  const addToCart = async (product, quantity = 1, customizations = {}, _price, designFile = '', specialInstructions = '') => {
     if (!isAuthenticated) {
       toast.error('Please login to add items to cart');
       return;
@@ -42,9 +42,8 @@ export const CartProvider = ({ children }) => {
     
     try {
       const res = await api.post('/cart/add', {
-        product: product.id || product._id,
+        product: product._id,
         quantity,
-        price: price || product.price,
         customizations,
         designFile,
         specialInstructions

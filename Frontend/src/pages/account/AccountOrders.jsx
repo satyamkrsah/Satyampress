@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Clock, XCircle, ChevronRight } from 'lucide-react';
-import api from '../api/axios';
+import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 
-const ProfileOrders = () => {
+const AccountOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,9 +106,8 @@ const ProfileOrders = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-background-dark transition-colors duration-300 min-h-screen py-10 md:py-14">
-      <div className="max-w-4xl mx-auto px-4 sm:px-8">
-        <h1 className="text-3xl font-serif font-semibold mb-8 text-black dark:text-cream-dark">Order History</h1>
+    <div>
+      <h2 className="text-2xl font-serif font-semibold mb-6 text-black dark:text-cream-dark border-b border-gray-200 dark:border-gray-800 pb-4">Order History</h2>
 
         {orders.length === 0 ? (
           <div className="bg-white dark:bg-black border border-black dark:border-white p-8 text-center">
@@ -181,9 +180,8 @@ const ProfileOrders = () => {
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 };
 
-export default ProfileOrders;
+export default AccountOrders;

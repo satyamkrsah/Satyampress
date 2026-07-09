@@ -47,9 +47,19 @@ const CategorySchema = new mongoose.Schema(
 );
 
 // Create slug from name
-CategorySchema.pre('save', function(next) {
-  this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-  next();
+// CategorySchema.pre('save', function(next) {
+//   this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+//   next();
+// });
+
+CategorySchema.pre('save', function () {
+  if (this.name) {
+    this.slug = this.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+  }
 });
 
 module.exports = mongoose.model('Category', CategorySchema);

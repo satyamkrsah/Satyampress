@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
+import AdminProductForm from '../../components/admin/AdminProductForm';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -14,7 +18,6 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      // In a real app we'd have a specific admin endpoint with pagination
       const res = await api.get('/products');
       if (res.data.success) {
         setProducts(res.data.data);
@@ -26,18 +29,49 @@ const AdminProducts = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    try {
+      const res = await api.delete(`/products/${id}`);
+      if (res.data.success) {
+        toast.success('Product deleted successfully');
+        setProducts(products.filter(p => p._id !== id));
+      }
+    } catch (error) {
+      toast.error('Failed to delete product');
+    }
+  };
+
+  const handleEdit = (product) => {
+    setProductToEdit(product);
+    setIsFormOpen(true);
+  };
+
+  const handleAdd = () => {
+    setProductToEdit(null);
+    setIsFormOpen(true);
+  };
+
+  const handleFormSuccess = () => {
+    setIsFormOpen(false);
+    fetchProducts();
+  };
+
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div>Loading products...</div>;
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading products...</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Products & Inventory</h1>
-        <button className="btn-primary flex items-center gap-2 py-2 px-4 text-sm">
+        <button 
+          onClick={handleAdd}
+          className="btn-primary flex items-center gap-2 py-2 px-4 text-sm"
+        >
           <Plus className="h-4 w-4" /> Add Product
         </button>
       </div>
@@ -74,19 +108,19 @@ const AdminProducts = () => {
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gray-100 rounded overflow-hidden flex-shrink-0 border border-gray-200">
-                        {product.images?.[0] ? (
-                          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                      <div className="h-10 w-10 bg-gray-100 rounded overflow-hidden flex-shrink-0 border border-gray-200 flex items-center justify-center">
+                        {product.thumbnail?.secureUrl ? (
+                          <img src={product.thumbnail.secureUrl} alt={product.name} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="h-full w-full bg-gray-200"></div>
+                          <ImageIcon className="h-4 w-4 text-gray-400" />
                         )}
                       </div>
-                      <span className="font-medium text-gray-900 line-clamp-1">{product.name}</span>
+                      <span className="font-medium text-gray-900 line-clamp-1" title={product.name}>{product.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">{product.sku || 'N/A'}</td>
                   <td className="px-6 py-4 text-gray-600">{product.category?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 font-medium">₹{product.price.toLocaleString('en-IN')}</td>
+                  <td className="px-6 py-4 font-medium">₹{(product.basePrice || product.price || 0).toLocaleString('en-IN')}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{product.stock}</span>
@@ -102,10 +136,18 @@ const AdminProducts = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button className="p-1.5 text-gray-400 hover:text-gold transition-colors">
+                      <button 
+                        onClick={() => handleEdit(product)}
+                        className="p-1.5 text-gray-400 hover:text-gold transition-colors"
+                        title="Edit"
+                      >
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                      <button 
+                        onClick={() => handleDelete(product._id)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                        title="Delete"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -123,6 +165,13 @@ const AdminProducts = () => {
           </table>
         </div>
       </div>
+
+      <AdminProductForm 
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={handleFormSuccess}
+        productToEdit={productToEdit}
+      />
     </div>
   );
 };

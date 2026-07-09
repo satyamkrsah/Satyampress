@@ -17,7 +17,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['order_created', 'order_status_update', 'system', 'promotion'],
+      enum: ['new_order', 'order_status_update', 'order_status', 'payment_success', 'payment_failed', 'product_added', 'product_updated', 'profile_updated', 'welcome', 'admin_announcement', 'system', 'promotion'],
       default: 'system'
     },
     relatedId: {

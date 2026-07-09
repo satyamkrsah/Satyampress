@@ -9,33 +9,98 @@ const { queueNotification } = require('../utils/notifier');
 // @access  Private/Admin
 exports.getDashboardStats = async (req, res, next) => {
   try {
-    const totalOrders = await Order.countDocuments();
-    const pendingOrders = await Order.countDocuments({ orderStatus: 'pending' });
-    const completedOrders = await Order.countDocuments({ orderStatus: 'delivered' });
-    const cancelledOrders = await Order.countDocuments({ orderStatus: 'cancelled' });
-    
-    const revenueResult = await Order.aggregate([
-      { $match: { orderStatus: { $nin: ['cancelled', 'refunded', 'rejected'] } } },
-      { $group: { _id: null, total: { $sum: '$grandTotal' } } }
-    ]);
-    
-    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const totalCustomers = await User.countDocuments({ role: 'customer' });
-    const totalProducts = await Product.countDocuments();
-    
-    const lowStockProducts = await Product.countDocuments({ $expr: { $lte: ['$stock', '$lowStockThreshold'] } });
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+    const [
+      totalOrders,
+      pendingOrders,
+      completedOrders,
+      cancelledOrders,
+      totalCustomers,
+      totalProducts,
+      recentOrders,
+      lowStockProducts,
+      revenueResult,
+      todayRevenueResult,
+      todayOrdersResult,
+      weeklySalesResult
+    ] = await Promise.all([
+      Order.countDocuments(),
+      Order.countDocuments({ orderStatus: 'pending' }),
+      Order.countDocuments({ orderStatus: 'delivered' }),
+      Order.countDocuments({ orderStatus: 'cancelled' }),
+      User.countDocuments({ role: 'customer' }),
+      Product.countDocuments(),
+      Order.find().sort('-createdAt').limit(10).populate('user', 'name email'),
+      Product.find({ $expr: { $lte: ['$stock', '$lowStockThreshold'] } }).limit(10).select('name stock lowStockThreshold images'),
+      Order.aggregate([
+        { $match: { orderStatus: { $nin: ['cancelled', 'refunded', 'rejected'] } } },
+        { $group: { _id: null, total: { $sum: '$grandTotal' } } }
+      ]),
+      Order.aggregate([
+        { 
+          $match: { 
+            orderStatus: { $nin: ['cancelled', 'refunded', 'rejected'] },
+            createdAt: { $gte: today }
+          } 
+        },
+        { $group: { _id: null, total: { $sum: '$grandTotal' } } }
+      ]),
+      Order.countDocuments({ createdAt: { $gte: today } }),
+      Order.aggregate([
+        { 
+          $match: { 
+            orderStatus: { $nin: ['cancelled', 'refunded', 'rejected'] },
+            createdAt: { $gte: sevenDaysAgo }
+          } 
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            sales: { $sum: '$grandTotal' }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ])
+    ]);
+
+    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+    const todayRevenue = todayRevenueResult.length > 0 ? todayRevenueResult[0].total : 0;
+
+    // Format weekly sales to ensure all 7 days are present
+    const weeklySales = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      const dateString = d.toISOString().split('T')[0];
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      const found = weeklySalesResult.find(item => item._id === dateString);
+      weeklySales.push({
+        day: dayName,
+        date: dateString,
+        sales: found ? found.sales : 0
+      });
+    }
 
     res.status(200).json({
       success: true,
       data: {
+        totalRevenue,
         totalOrders,
+        totalCustomers,
+        totalProducts,
         pendingOrders,
         completedOrders,
         cancelledOrders,
-        totalRevenue,
-        totalCustomers,
-        totalProducts,
+        todayOrders: todayOrdersResult,
+        todayRevenue,
+        weeklySales,
+        recentOrders,
         lowStockProducts
       }
     });

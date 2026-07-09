@@ -37,6 +37,18 @@ const UserSchema = new mongoose.Schema(
       enum: ['active', 'blocked'],
       default: 'active'
     },
+    address: {
+      type: String,
+      default: ''
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other', ''],
+      default: ''
+    },
+    dob: {
+      type: Date
+    },
     addresses: [
       {
         street: String,
@@ -48,6 +60,16 @@ const UserSchema = new mongoose.Schema(
           type: Boolean,
           default: false,
         },
+      }
+    ],
+    avatar: {
+      type: String,
+      default: '',
+    },
+    wishlist: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Product',
       }
     ],
     resetPasswordToken: String,

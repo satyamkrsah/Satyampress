@@ -15,8 +15,12 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
-      navigate('/');
+      const loggedInUser = await login(email, password);
+      if (loggedInUser?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       console.error('Login failed', error);
     } finally {

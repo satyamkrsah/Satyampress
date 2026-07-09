@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useCart } from '../context/CartContext';
-import { ShoppingBag } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useCart } from "../context/CartContext";
+import { ShoppingBag } from "lucide-react";
 
 const ProductCard = ({ product, compact = false }) => {
   const { addToCart } = useCart();
@@ -13,16 +13,27 @@ const ProductCard = ({ product, compact = false }) => {
     addToCart(product);
   };
 
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  const price = product.basePrice ?? product.price ?? 0;
+
+  const hasDiscount = product.originalPrice && product.originalPrice > price;
+
   const discountPercent = hasDiscount
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    ? Math.round(
+        ((product.originalPrice - price) / product.originalPrice) * 100,
+      )
     : 0;
 
   return (
-    <motion.div whileHover={{ y: -4 }} className="group flex flex-col h-full relative cursor-pointer">
+    <motion.div
+      whileHover={{ y: -4 }}
+      className="group flex flex-col h-full relative cursor-pointer"
+    >
       {/* Image Section */}
       <div className="relative overflow-hidden rounded-[24px] border border-black/10 dark:border-white/10 aspect-[4/5] bg-black/5 dark:bg-white/5">
-        <Link to={`/product/${product.id}`} className="block w-full h-full">
+        <Link
+          to={`/product/${product._id || product.id}`}
+          className="block w-full h-full"
+        >
           {/* Badges */}
           {hasDiscount && (
             <span className="absolute top-3 left-3 z-10 bg-[#222] dark:bg-white text-white dark:text-black text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wide shadow-md">
@@ -37,7 +48,13 @@ const ProductCard = ({ product, compact = false }) => {
 
           {/* Product Image */}
           <img
-            src={product.image}
+            src={
+              product.thumbnail?.secureUrl ||
+              product.gallery?.[0]?.secureUrl ||
+              product.image?.secureUrl ||
+              product.image ||
+              "/images/no-image.png"
+            }
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
@@ -55,9 +72,13 @@ const ProductCard = ({ product, compact = false }) => {
       </div>
 
       {/* Text Section (Outside the image) */}
-      <div className={`flex flex-col flex-grow pt-4 ${compact ? 'px-1' : 'px-2'}`}>
-        <Link to={`/product/${product.id}`}>
-          <h3 className={`font-sans text-black dark:text-white hover:text-gold transition-colors line-clamp-1 font-semibold ${compact ? 'text-sm' : 'text-[15px]'}`}>
+      <div
+        className={`flex flex-col flex-grow pt-4 ${compact ? "px-1" : "px-2"}`}
+      >
+        <Link to={`/product/${product._id || product.id}`}>
+          <h3
+            className={`font-sans text-black dark:text-white hover:text-gold transition-colors line-clamp-1 font-semibold ${compact ? "text-sm" : "text-[15px]"}`}
+          >
             {product.name}
           </h3>
         </Link>
@@ -66,15 +87,19 @@ const ProductCard = ({ product, compact = false }) => {
           {hasDiscount ? (
             <>
               <span className="text-sm text-black/40 dark:text-white/40 line-through font-medium">
-                ₹{product.originalPrice.toLocaleString('en-IN')}
+                ₹{product.originalPrice.toLocaleString("en-IN")}
               </span>
-              <span className={`font-bold text-black dark:text-white ${compact ? 'text-sm' : 'text-[17px]'}`}>
-                ₹{product.price.toLocaleString('en-IN')}
+              <span
+                className={`font-bold text-black dark:text-white ${compact ? "text-sm" : "text-[17px]"}`}
+              >
+                ₹{price.toLocaleString("en-IN")}
               </span>
             </>
           ) : (
-            <span className={`font-bold text-black dark:text-white ${compact ? 'text-sm' : 'text-[17px]'}`}>
-              ₹{product.price.toLocaleString('en-IN')}
+            <span
+              className={`font-bold text-black dark:text-white ${compact ? "text-sm" : "text-[17px]"}`}
+            >
+              ₹{price.toLocaleString("en-IN")}
             </span>
           )}
         </div>

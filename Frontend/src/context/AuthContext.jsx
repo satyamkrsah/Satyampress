@@ -71,8 +71,84 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const res = await api.put('/auth/profile', profileData);
+      if (res.data.success) {
+        setUser(res.data.data);
+        toast.success('Profile updated successfully!');
+        return res.data.data;
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Profile update failed';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
+  const updatePassword = async (currentPassword, newPassword) => {
+    try {
+      const res = await api.put('/auth/password', { currentPassword, newPassword });
+      if (res.data.success) {
+        toast.success('Password updated successfully!');
+        return true;
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Password update failed';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
+  const uploadProfileImage = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const res = await api.post('/auth/profile-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (res.data.success) {
+        setUser(res.data.data);
+        toast.success('Profile image updated!');
+        return res.data.data;
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to upload image';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
+  const deleteProfileImage = async () => {
+    try {
+      const res = await api.delete('/auth/profile-image');
+      if (res.data.success) {
+        setUser(res.data.data);
+        toast.success('Profile image removed!');
+        return res.data.data;
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to remove image';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      logout, 
+      register, 
+      isAuthenticated: !!user,
+      updateProfile,
+      updatePassword,
+      uploadProfileImage,
+      deleteProfileImage
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );

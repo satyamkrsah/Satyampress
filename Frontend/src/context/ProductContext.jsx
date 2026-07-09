@@ -1,17 +1,9 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import api from '../api/axios';
-import { products as fallbackProducts, categories as fallbackCategories } from '../data/products';
 
 const ProductContext = createContext();
 
 export const useProduct = () => useContext(ProductContext);
-
-const SALE_ITEMS = [
-  { id: 'w1', originalPrice: 216 },
-  { id: 'w3', originalPrice: 450 },
-  { id: 'w5', originalPrice: 500 },
-  { id: 'b5', originalPrice: 80 },
-];
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
@@ -28,29 +20,20 @@ export const ProductProvider = ({ children }) => {
       try {
         setLoading(true);
         const [productsRes, categoriesRes] = await Promise.all([
-          api.get('/products').catch(() => ({ data: { data: fallbackProducts }})),
+          api.get('/products').catch(() => ({ data: { data: [] }})),
           api.get('/categories').catch(() => ({ data: { data: [] }}))
         ]);
 
-        let fetchedProducts = productsRes.data.data;
-        let fetchedCategories = categoriesRes.data.data.map(c => c.name);
-
-        // If backend has no data yet, use fallback data for smooth transition
-        if (!fetchedProducts || fetchedProducts.length === 0) {
-          fetchedProducts = fallbackProducts;
-        }
-        if (!fetchedCategories || fetchedCategories.length === 0) {
-          fetchedCategories = fallbackCategories.filter(c => c !== "All");
-        }
+        let fetchedProducts = productsRes.data?.data || [];
+        let fetchedCategories = categoriesRes.data?.data?.map(c => c.name) || [];
 
         setProducts(fetchedProducts);
         setCategories(["All", ...fetchedCategories]);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError(err.message);
-        // Fallback
-        setProducts(fallbackProducts);
-        setCategories(fallbackCategories);
+        setProducts([]);
+        setCategories(["All"]);
       } finally {
         setLoading(false);
       }
@@ -61,24 +44,20 @@ export const ProductProvider = ({ children }) => {
 
   const enrichedProducts = useMemo(() => {
     return products.map((p) => {
-      // Handle both API format and local format for ID
-      const pId = p._id || p.id;
-      const sale = SALE_ITEMS.find((s) => s.id === pId);
-      
-      // Calculate price (handling backend format where price might be basePrice)
+      const pId = p._id;
       const currentPrice = p.basePrice || p.price;
       const categoryName = typeof p.category === 'object' ? p.category?.name : p.category;
 
       const formattedProduct = {
         ...p,
-        id: pId,
+        _id: pId,
+        id: pId, // Keep id for any legacy components not yet updated, but primarily use _id
         price: currentPrice,
         category: categoryName || p.category
       };
 
-      if (sale) {
-        const salePrice = Math.round(currentPrice * 0.55);
-        return { ...formattedProduct, price: salePrice, originalPrice: sale.originalPrice };
+      if (p.offerPrice) {
+        return { ...formattedProduct, price: p.offerPrice, originalPrice: currentPrice };
       }
       return formattedProduct;
     });

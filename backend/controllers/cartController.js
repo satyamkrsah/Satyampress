@@ -77,7 +77,35 @@ exports.getCart = async (req, res, next) => {
 // @access  Private
 exports.addToCart = async (req, res, next) => {
   try {
-    const { product, quantity, price, customizations, designFileUrl, specialInstructions } = req.body;
+    const { product, quantity, customizations, designFile, specialInstructions } = req.body;
+
+    const dbProduct = await Product.findById(product);
+    if (!dbProduct) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+
+    // Calculate final price based on basePrice and customizations
+    let finalPrice = dbProduct.basePrice || 0;
+    if (customizations && dbProduct.customizations) {
+      const map = {
+        paperSize: 'paperSizes',
+        paperGsm: 'paperGsm',
+        paperType: 'paperTypes',
+        colorOption: 'colorOptions',
+        lamination: 'lamination',
+        cornerFinish: 'cornerFinish',
+        binding: 'binding'
+      };
+      for (const [key, val] of Object.entries(customizations)) {
+        const schemaKey = map[key];
+        if (schemaKey && dbProduct.customizations[schemaKey]) {
+          const opt = dbProduct.customizations[schemaKey].find(o => o.name === val);
+          if (opt && opt.priceModifier) {
+            finalPrice += opt.priceModifier;
+          }
+        }
+      }
+    }
 
     let cart = await Cart.findOne({ user: req.user.id });
 
@@ -95,14 +123,17 @@ exports.addToCart = async (req, res, next) => {
     if (itemIndex > -1) {
       // Product exists with same config, update quantity
       cart.items[itemIndex].quantity += quantity;
+      cart.items[itemIndex].price = finalPrice; // Update price just in case
     } else {
       // Product does not exist or different config, add new item
       cart.items.push({
         product,
+        name: dbProduct.name,
+        image: dbProduct.thumbnail,
         quantity,
-        price,
+        price: finalPrice,
         customizations,
-        designFileUrl,
+        designFile, // Matches schema field name
         specialInstructions
       });
     }

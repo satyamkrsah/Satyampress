@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
@@ -10,12 +10,22 @@ import {
   Moon,
   Sun,
   LogOut,
+  Bell,
+  Settings,
+  LayoutDashboard,
+  ShoppingBag,
+  MapPin,
+  CreditCard,
+  Image as ImageIcon,
+  Users,
+  Grid
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useProduct } from "../context/ProductContext";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
-import { categories } from "../data/products";
+import { useNotification } from "../context/NotificationContext";
+
 import AnnouncementBar from "./AnnouncementBar";
 import logo from "../assets/satyam4.svg";
 
@@ -24,9 +34,29 @@ const Navbar = () => {
   const { searchQuery, setSearchQuery } = useProduct();
   const { isDarkMode, toggleTheme } = useTheme();
   const { isAuthenticated, user, logout } = useAuth();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotification();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  
+  const userMenuRef = useRef(null);
+  const notificationRef = useRef(null);
+  
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setIsNotificationOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -100,14 +130,135 @@ const Navbar = () => {
               </button>
 
               {isAuthenticated ? (
-                <button
-                  onClick={logout}
-                  className="p-2 text-black dark:text-cream-dark hover:text-gold transition-colors hidden sm:block flex items-center"
-                  aria-label="Logout"
-                  title={`Logged in as ${user?.name}`}
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
+                <>
+                  {/* Notification Bell */}
+                  <div className="relative" ref={notificationRef}>
+                    <button
+                      onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                      className="relative p-2 text-black dark:text-cream-dark hover:text-gold transition-colors"
+                    >
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    
+                    {/* Notification Dropdown */}
+                    {isNotificationOpen && (
+                      <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-surface-dark border border-black dark:border-white shadow-xl z-50">
+                        <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
+                          <span className="font-semibold text-black dark:text-white">Notifications</span>
+                          {unreadCount > 0 && (
+                            <button onClick={markAllAsRead} className="text-xs text-gold hover:underline">
+                              Mark all as read
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                          {notifications.length > 0 ? (
+                            notifications.slice(0, 5).map(notif => (
+                              <div key={notif._id} 
+                                className={`p-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-black transition-colors ${!notif.isRead ? 'bg-gold/10' : ''}`}
+                                onClick={() => markAsRead(notif._id)}
+                              >
+                                <p className="text-sm font-medium text-black dark:text-white">{notif.title}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notif.message}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
+                          )}
+                        </div>
+                        <div className="p-2 border-t border-gray-200 dark:border-gray-700 text-center">
+                          <Link to="/account/notifications" onClick={() => setIsNotificationOpen(false)} className="text-xs text-gold hover:underline">
+                            View All
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* User Dropdown */}
+                  <div className="relative hidden sm:block" ref={userMenuRef}>
+                    <button
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="p-1 sm:p-2 flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gold text-white font-semibold uppercase text-xs sm:text-sm hover:bg-black hover:text-gold dark:hover:bg-white transition-colors ml-2 object-cover overflow-hidden border border-transparent"
+                      aria-label="User Menu"
+                    >
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                      ) : user?.name ? (
+                        user.name.substring(0, 2)
+                      ) : (
+                        <User className="h-4 w-4" />
+                      )}
+                    </button>
+                    
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-surface-dark border border-black dark:border-white shadow-xl z-50">
+                        <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                          <p className="text-sm font-bold text-black dark:text-white truncate">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                        <div className="py-1">
+                          {user.role === 'admin' ? (
+                            <>
+                              <Link to="/admin/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <LayoutDashboard className="w-4 h-4 mr-3" /> Dashboard
+                              </Link>
+                              <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <ShoppingBag className="w-4 h-4 mr-3" /> Products
+                              </Link>
+                              <Link to="/admin/categories" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <Grid className="w-4 h-4 mr-3" /> Categories
+                              </Link>
+                              <Link to="/admin/orders" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <ShoppingCart className="w-4 h-4 mr-3" /> Orders
+                              </Link>
+                              <Link to="/admin/customers" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <Users className="w-4 h-4 mr-3" /> Customers
+                              </Link>
+                              <Link to="/admin/payments" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <CreditCard className="w-4 h-4 mr-3" /> Payments
+                              </Link>
+                              <Link to="/admin/media" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <ImageIcon className="w-4 h-4 mr-3" /> Media
+                              </Link>
+                            </>
+                          ) : (
+                            <>
+                              <Link to="/account" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <LayoutDashboard className="w-4 h-4 mr-3" /> Dashboard
+                              </Link>
+                              <Link to="/account/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <User className="w-4 h-4 mr-3" /> My Profile
+                              </Link>
+                              <Link to="/account/orders" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <ShoppingBag className="w-4 h-4 mr-3" /> My Orders
+                              </Link>
+                              <Link to="/account/addresses" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <MapPin className="w-4 h-4 mr-3" /> My Addresses
+                              </Link>
+                              <Link to="/account/wishlist" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <Heart className="w-4 h-4 mr-3" /> Wishlist
+                              </Link>
+                              <Link to="/account/settings" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-black dark:text-white hover:bg-gold/10">
+                                <Settings className="w-4 h-4 mr-3" /> Settings
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                        <div className="border-t border-gray-200 dark:border-gray-700 py-1">
+                          <button onClick={() => { setIsUserMenuOpen(false); logout(); navigate('/'); }} className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10">
+                            <LogOut className="w-4 h-4 mr-3" /> Logout
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <Link
                   to="/login"
@@ -187,15 +338,13 @@ const Navbar = () => {
 
               {/* Mobile Login / Logout */}
               {isAuthenticated ? (
-                <button
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
+                <Link
+                  to={user?.role === 'admin' ? '/admin/dashboard' : '/account'}
+                  onClick={() => setIsMenuOpen(false)}
                   className="block w-full text-left px-3 py-3 text-sm font-medium uppercase tracking-wider text-black dark:text-cream-dark dark:text-black dark:text-white hover:text-gold dark:hover:text-gold transition-colors"
                 >
-                  Logout ({user?.name})
-                </button>
+                  {user?.role === 'admin' ? 'Admin Dashboard' : 'My Account'}
+                </Link>
               ) : (
                 <Link
                   to="/login"

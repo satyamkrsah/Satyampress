@@ -3,7 +3,8 @@ const multer = require('multer');
 const {
   uploadFile,
   getMediaFiles,
-  deleteMediaFile
+  deleteMediaFile,
+  getMyMediaFiles
 } = require('../controllers/uploadController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -36,6 +37,9 @@ const upload = multer({
 });
 
 // Routes
+router.route('/myuploads')
+  .get(protect, getMyMediaFiles);
+
 router.route('/')
   .post(protect, upload.single('file'), uploadFile)
   .get(protect, authorize('admin'), getMediaFiles);

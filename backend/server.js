@@ -1,5 +1,7 @@
-const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config();
+
+const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -26,9 +28,10 @@ const adminRoutes = require('./routes/adminRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const payments = require('./routes/paymentRoutes');
+const notifications = require('./routes/notificationRoutes');
 
 // Load env vars
-dotenv.config();
+// dotenv.config();
 
 // Connect to database
 // Connect to database
@@ -110,6 +113,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/payments', payments);
+app.use('/api/notifications', notifications);
 
 // Error handler middleware (Should be after routes)
 app.use(errorHandler);

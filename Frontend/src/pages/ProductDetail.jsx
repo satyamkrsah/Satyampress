@@ -21,7 +21,7 @@ const ProductDetail = () => {
   });
   const [livePrice, setLivePrice] = useState(0);
 
-  const product = products.find((p) => p.id === id);
+  const product = products.find((p) => p._id === id || p.id === id);
 
   useEffect(() => {
     setQuantity(1);
