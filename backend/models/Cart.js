@@ -8,8 +8,7 @@ const CartItemSchema = new mongoose.Schema({
   },
   name: { type: String, required: true },
   image: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Media'
+    type: String
   },
   quantity: {
     type: Number,
@@ -27,13 +26,8 @@ const CartItemSchema = new mongoose.Schema({
   specialInstructions: String,
   // Storing the selected customization options
   customizations: {
-    paperSize: String,
-    paperGsm: String,
-    paperType: String,
-    colorOption: String,
-    lamination: String,
-    cornerFinish: String,
-    binding: String
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   }
 });
 

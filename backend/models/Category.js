@@ -40,6 +40,15 @@ const CategorySchema = new mongoose.Schema(
       type: String
     },
     slug: String,
+    customizationFields: [{
+      name: { type: String, required: true },
+      type: { type: String, enum: ['Text', 'Number', 'Select', 'Radio', 'Checkbox', 'Color Picker', 'File Upload'], required: true },
+      isRequired: { type: Boolean, default: false },
+      options: [{
+        name: { type: String, required: true },
+        priceModifier: { type: Number, default: 0 }
+      }]
+    }]
   },
   {
     timestamps: true

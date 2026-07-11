@@ -10,23 +10,63 @@ import ProcessSteps from '../components/ProcessSteps';
 import TestimonialsSection from '../components/TestimonialsSection';
 import ImageComparisonSlider from '../components/ImageComparisonSlider';
 import { heroSlides, homeCategories, curatedCollections, priceRanges } from '../data/homeData';
+import api from '../api/axios';
 
 const Home = () => {
-  const { products, trendingProducts, saleProducts, premiumCollection, setPriceRange } = useProduct();
+  const { products, trendingProducts, saleProducts, setPriceRange } = useProduct();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [homeCollections, setHomeCollections] = useState({
+    premium: [],
+    bestSellers: [],
+    newArrivals: [],
+    featured: []
+  });
+  const mainProducts = products.filter(
+  (product) => product.showInMainCatalog === true
+);
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const [prem, best, newArr, feat] = await Promise.all([
+          api.get('/products/premium?limit=6'),
+          api.get('/products/best-sellers?limit=6'),
+          api.get('/products/new-arrivals?limit=6'),
+          api.get('/products/featured?limit=6')
+        ]);
+        
+        const formatProducts = (res) => {
+          return (res.data?.data || []).map(p => {
+            const currentPrice = p.basePrice || p.price;
+            return {
+              ...p,
+              price: p.offerPrice || currentPrice,
+              originalPrice: p.offerPrice ? currentPrice : null,
+              categoryName: p.category && typeof p.category === 'object' ? p.category.name : p.category
+            };
+          });
+        };
+
+        setHomeCollections({
+          premium: formatProducts(prem),
+          bestSellers: formatProducts(best),
+          newArrivals: formatProducts(newArr),
+          featured: formatProducts(feat)
+        });
+      } catch (err) {
+        console.error("Error fetching home collections", err);
+      }
+    };
+    fetchCollections();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-    console.log("Interval Running...");
-    
-    setCurrentSlide((prev) => {
-      console.log("Previous:", prev);
-      return (prev + 1) % heroSlides.length;
-    });
-  }, 6000);
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex flex-col bg-white dark:bg-background-dark transition-colors duration-300">
@@ -144,7 +184,7 @@ const Home = () => {
 
           {products.length > 0 ? (
             <div className="product-grid">
-              {products.slice(0, 10).map((product) => (
+              {mainProducts.slice(0, 10).map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>
@@ -232,57 +272,93 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Premium Collection */}
-      <section className="py-16 md:py-24 bg-white dark:bg-background-dark transition-colors duration-300">
-        <div className="w-full px-4 sm:px-8 lg:px-12">
-          <div className="text-center mb-14">
-            <p className="section-subheading mb-3">Exclusive</p>
-            <h2 className="section-heading">Premium Collection</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {premiumCollection.slice(0, 5).map((product) => (
-              <Link 
-                key={product._id} 
-                to={`/product/${product._id}`} 
-                className="group relative bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-transparent hover:border-gold/40 hover:shadow-[0_10px_40px_rgba(212,175,55,0.15)] transition-all duration-500 hover:-translate-y-2 flex flex-col"
-              >
-                <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-black relative">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  {/* Subtle overlay on hover */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
-                  
-                  {/* View Details text that slides up */}
-                  <div className="absolute bottom-0 left-0 right-0 py-3 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-center">
-                    <span className="text-white text-xs uppercase tracking-[0.2em] font-medium">View Details</span>
-                  </div>
-                </div>
-                
-                <div className="p-5 flex flex-col flex-grow items-center text-center bg-white dark:bg-[#121212]">
-                  <h3 className="font-serif text-sm md:text-base text-black dark:text-cream-dark group-hover:text-gold transition-colors line-clamp-2 mb-2 leading-snug">
-                    {product.name}
-                  </h3>
-                  <div className="mt-auto w-full pt-3 border-t border-black/5 dark:border-white/5">
-                    <p className="text-gold font-semibold text-sm md:text-base tracking-wide">
-                      ₹{product.price.toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                </div>
+      {/* Best Sellers */}
+      {homeCollections.bestSellers.length > 0 && (
+        <section className="py-16 md:py-24 bg-white dark:bg-background-dark transition-colors duration-300">
+          <div className="w-full px-4 sm:px-8 lg:px-12">
+            <div className="text-center mb-14">
+              <p className="section-subheading mb-3">Popular</p>
+              <h2 className="section-heading">Best Sellers</h2>
+            </div>
+            <div className="product-grid">
+              {homeCollections.bestSellers.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link to="/best-sellers" className="btn-gold inline-block">
+                View All Best Sellers
               </Link>
-            ))}
+            </div>
           </div>
+        </section>
+      )}
 
-          <div className="text-center mt-10">
-            <Link to="/products" className="btn-gold inline-block">
-              Shop Premium
-            </Link>
+      {/* New Arrivals */}
+      {homeCollections.newArrivals.length > 0 && (
+        <section className="py-16 md:py-24 bg-white dark:bg-black transition-colors duration-300">
+          <div className="w-full px-4 sm:px-8 lg:px-12">
+            <div className="text-center mb-14">
+              <p className="section-subheading mb-3">Latest</p>
+              <h2 className="section-heading">New Arrivals</h2>
+            </div>
+            <div className="product-grid">
+              {homeCollections.newArrivals.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link to="/new-arrivals" className="btn-outline inline-block">
+                View All New Arrivals
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Featured Products */}
+      {homeCollections.featured.length > 0 && (
+        <section className="py-16 md:py-24 bg-white dark:bg-background-dark transition-colors duration-300">
+          <div className="w-full px-4 sm:px-8 lg:px-12">
+            <div className="text-center mb-14">
+              <p className="section-subheading mb-3">Handpicked</p>
+              <h2 className="section-heading">Featured Products</h2>
+            </div>
+            <div className="product-grid">
+              {homeCollections.featured.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link to="/featured" className="btn-gold inline-block">
+                View All Featured
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Premium Collection */}
+      {homeCollections.premium.length > 0 && (
+        <section className="py-16 md:py-24 bg-white dark:bg-black transition-colors duration-300">
+          <div className="w-full px-4 sm:px-8 lg:px-12">
+            <div className="text-center mb-14">
+              <p className="section-subheading mb-3">Exclusive</p>
+              <h2 className="section-heading">Premium Collection</h2>
+            </div>
+            <div className="product-grid">
+              {homeCollections.premium.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link to="/premium" className="btn-outline inline-block">
+                Shop Premium
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <ProcessSteps />
       <TestimonialsSection />

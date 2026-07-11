@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Image as ImageIcon, Save } from 'lucide-react';
+import { X, Image as ImageIcon, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 import MediaSelector from './MediaSelector';
 
 const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
   const [categories, setCategories] = useState([]);
-  const [isMediaSelectorOpen, setIsMediaSelectorOpen] = useState(false);
+  const [mediaSelectorState, setMediaSelectorState] = useState({ isOpen: false, type: 'thumbnail' });
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -18,7 +18,10 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
     lowStockThreshold: 10,
     category: '',
     isActive: true,
-    thumbnail: null // Will store the media object
+    thumbnail: null,
+    gallery: [],
+    showInMainCatalog: true,
+    collectionType: 'none'
   });
 
   useEffect(() => {
@@ -34,7 +37,10 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
           lowStockThreshold: productToEdit.lowStockThreshold || 10,
           category: productToEdit.category?._id || productToEdit.category || '',
           isActive: productToEdit.isActive ?? true,
-          thumbnail: productToEdit.thumbnail || null
+          thumbnail: productToEdit.thumbnail || null,
+          gallery: productToEdit.gallery || [],
+          showInMainCatalog: productToEdit.showInMainCatalog ?? true,
+          collectionType: productToEdit.collectionType || 'none'
         });
       } else {
         setFormData({
@@ -46,7 +52,10 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
           lowStockThreshold: 10,
           category: '',
           isActive: true,
-          thumbnail: null
+          thumbnail: null,
+          gallery: [],
+          showInMainCatalog: true,
+          collectionType: 'none'
         });
       }
     }
@@ -71,8 +80,29 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
     });
   };
 
-  const handleMediaSelect = (media) => {
-    setFormData({ ...formData, thumbnail: media });
+  const handleMediaSelect = (selected) => {
+    if (mediaSelectorState.type === 'thumbnail') {
+      setFormData({ ...formData, thumbnail: selected });
+    } else {
+      setFormData({ ...formData, gallery: [...formData.gallery, ...selected] });
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    setFormData({
+      ...formData,
+      gallery: formData.gallery.filter((_, i) => i !== index)
+    });
+  };
+
+  const moveGalleryImage = (index, direction) => {
+    const newGallery = [...formData.gallery];
+    if (direction === 'left' && index > 0) {
+      [newGallery[index], newGallery[index - 1]] = [newGallery[index - 1], newGallery[index]];
+    } else if (direction === 'right' && index < newGallery.length - 1) {
+      [newGallery[index], newGallery[index + 1]] = [newGallery[index + 1], newGallery[index]];
+    }
+    setFormData({ ...formData, gallery: newGallery });
   };
 
   const handleSubmit = async (e) => {
@@ -82,7 +112,8 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
     try {
       const payload = {
         ...formData,
-        thumbnail: formData.thumbnail?._id || undefined, // Send ObjectId to backend
+        thumbnail: formData.thumbnail?._id || undefined,
+        gallery: formData.gallery.map(m => m._id)
       };
 
       let res;
@@ -197,7 +228,7 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
                     <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 line-clamp-1">{formData.thumbnail.originalName}</p>
                     <button 
                       type="button" 
-                      onClick={() => setIsMediaSelectorOpen(true)}
+                      onClick={() => setMediaSelectorState({ isOpen: true, type: 'thumbnail' })}
                       className="text-sm text-gold hover:underline"
                     >
                       Change Image
@@ -207,13 +238,52 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setIsMediaSelectorOpen(true)}
+                  onClick={() => setMediaSelectorState({ isOpen: true, type: 'thumbnail' })}
                   className="w-full md:w-1/2 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 hover:border-gold hover:bg-gold/5 transition-colors"
                 >
                   <ImageIcon className="h-8 w-8 text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Select from Media Library</span>
                 </button>
               )}
+            </div>
+
+            <div className="md:col-span-2 border-t border-gray-100 dark:border-gray-800 pt-6">
+              <div className="flex justify-between items-center mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gallery Images</label>
+                <button 
+                  type="button" 
+                  onClick={() => setMediaSelectorState({ isOpen: true, type: 'gallery' })}
+                  className="text-sm text-gold hover:underline flex items-center gap-1"
+                >
+                  + Add Images
+                </button>
+              </div>
+              
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {formData.gallery.map((media, index) => (
+                  <div key={`${media._id}-${index}`} className="relative h-24 w-24 rounded-lg overflow-hidden border border-gray-200 shrink-0 group">
+                    <img src={media.secureUrl} alt="Gallery item" className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      {index > 0 && (
+                        <button type="button" onClick={() => moveGalleryImage(index, 'left')} className="p-1 bg-white/20 hover:bg-white text-white hover:text-black rounded">
+                          <ChevronLeft className="h-3 w-3" />
+                        </button>
+                      )}
+                      <button type="button" onClick={() => removeGalleryImage(index)} className="p-1 bg-white/20 hover:bg-red-500 text-white rounded">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                      {index < formData.gallery.length - 1 && (
+                        <button type="button" onClick={() => moveGalleryImage(index, 'right')} className="p-1 bg-white/20 hover:bg-white text-white hover:text-black rounded">
+                          <ChevronRight className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {formData.gallery.length === 0 && (
+                  <div className="text-sm text-gray-500">No gallery images added.</div>
+                )}
+              </div>
             </div>
 
             <div className="md:col-span-2">
@@ -241,6 +311,36 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
                 Product is active (visible in store)
               </label>
             </div>
+
+            <div className="md:col-span-2 flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="showInMainCatalog"
+                id="showInMainCatalog"
+                checked={formData.showInMainCatalog}
+                onChange={handleChange}
+                className="w-4 h-4 text-gold rounded border-gray-300 focus:ring-gold"
+              />
+              <label htmlFor="showInMainCatalog" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Show in Main Catalog
+              </label>
+            </div>
+
+            <div className="md:col-span-2 border-t border-gray-100 dark:border-gray-800 pt-6 mt-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Collection Type</label>
+              <select
+                name="collectionType"
+                value={formData.collectionType}
+                onChange={handleChange}
+                className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg p-2.5 focus:border-gold outline-none"
+              >
+                <option value="none">None</option>
+                <option value="premium">Premium Collection</option>
+                <option value="bestSeller">Best Seller</option>
+                <option value="newArrival">New Arrival</option>
+                <option value="featured">Featured Product</option>
+              </select>
+            </div>
           </div>
         </form>
 
@@ -265,9 +365,10 @@ const AdminProductForm = ({ isOpen, onClose, onSuccess, productToEdit }) => {
       </div>
 
       <MediaSelector 
-        isOpen={isMediaSelectorOpen} 
-        onClose={() => setIsMediaSelectorOpen(false)}
+        isOpen={mediaSelectorState.isOpen} 
+        onClose={() => setMediaSelectorState({ ...mediaSelectorState, isOpen: false })}
         onSelect={handleMediaSelect}
+        multiple={mediaSelectorState.type === 'gallery'}
       />
     </div>
   );

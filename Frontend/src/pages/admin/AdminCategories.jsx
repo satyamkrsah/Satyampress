@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronUp, ChevronDown, X } from 'lucide-react';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 
@@ -16,7 +16,8 @@ const AdminCategories = () => {
     status: 'active',
     seoTitle: '',
     seoDescription: '',
-    seoKeywords: ''
+    seoKeywords: '',
+    customizationFields: []
   });
 
   useEffect(() => {
@@ -45,7 +46,8 @@ const AdminCategories = () => {
         status: category.status || 'active',
         seoTitle: category.seoTitle || '',
         seoDescription: category.seoDescription || '',
-        seoKeywords: category.seoKeywords || ''
+        seoKeywords: category.seoKeywords || '',
+        customizationFields: category.customizationFields || []
       });
     } else {
       setEditingCategory(null);
@@ -55,7 +57,8 @@ const AdminCategories = () => {
         status: 'active',
         seoTitle: '',
         seoDescription: '',
-        seoKeywords: ''
+        seoKeywords: '',
+        customizationFields: []
       });
     }
     setShowModal(true);
@@ -88,6 +91,70 @@ const AdminCategories = () => {
         toast.error('Failed to delete category');
       }
     }
+  };
+
+  const handleAddField = () => {
+    setFormData(prev => ({
+      ...prev,
+      customizationFields: [
+        ...prev.customizationFields,
+        { name: '', type: 'Select', isRequired: false, options: [] }
+      ]
+    }));
+  };
+
+  const handleRemoveField = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationFields: prev.customizationFields.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleFieldChange = (index, key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationFields: prev.customizationFields.map((field, i) => 
+        i === index ? { ...field, [key]: value } : field
+      )
+    }));
+  };
+
+  const handleAddOption = (fieldIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationFields: prev.customizationFields.map((field, i) => 
+        i === fieldIndex 
+          ? { ...field, options: [...(field.options || []), { name: '', priceModifier: 0 }] }
+          : field
+      )
+    }));
+  };
+
+  const handleRemoveOption = (fieldIndex, optionIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationFields: prev.customizationFields.map((field, i) => 
+        i === fieldIndex 
+          ? { ...field, options: field.options.filter((_, oI) => oI !== optionIndex) }
+          : field
+      )
+    }));
+  };
+
+  const handleOptionChange = (fieldIndex, optionIndex, key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationFields: prev.customizationFields.map((field, i) => 
+        i === fieldIndex 
+          ? { 
+              ...field, 
+              options: field.options.map((opt, oI) => 
+                oI === optionIndex ? { ...opt, [key]: value } : opt
+              )
+            }
+          : field
+      )
+    }));
   };
 
   const filteredCategories = categories.filter(c => 
@@ -198,6 +265,77 @@ const AdminCategories = () => {
                     <label className="block text-sm text-gray-600 mb-1">SEO Keywords</label>
                     <input type="text" value={formData.seoKeywords} onChange={(e) => setFormData({...formData, seoKeywords: e.target.value})} className="w-full border rounded-lg p-2 text-sm" placeholder="Comma separated" />
                   </div>
+                </div>
+              </div>
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-medium">Customization Builder</h3>
+                  <button type="button" onClick={handleAddField} className="text-sm text-gold hover:underline flex items-center gap-1">
+                    <Plus className="h-4 w-4"/> Add Field
+                  </button>
+                </div>
+                <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
+                  {formData.customizationFields.map((field, fIndex) => (
+                    <div key={fIndex} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                      <div className="flex justify-between items-start gap-4 mb-3">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex gap-3">
+                            <div className="flex-1">
+                              <label className="block text-xs text-gray-500 mb-1">Field Name</label>
+                              <input required type="text" value={field.name} onChange={(e) => handleFieldChange(fIndex, 'name', e.target.value)} className="w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="e.g. Paper GSM" />
+                            </div>
+                            <div className="w-32">
+                              <label className="block text-xs text-gray-500 mb-1">Type</label>
+                              <select value={field.type} onChange={(e) => handleFieldChange(fIndex, 'type', e.target.value)} className="w-full border border-gray-300 rounded p-1.5 text-sm">
+                                <option value="Select">Select</option>
+                                <option value="Radio">Radio</option>
+                                <option value="Checkbox">Checkbox</option>
+                                <option value="Text">Text</option>
+                                <option value="Number">Number</option>
+                                <option value="Color Picker">Color Picker</option>
+                                <option value="File Upload">File Upload</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" id={`req-${fIndex}`} checked={field.isRequired} onChange={(e) => handleFieldChange(fIndex, 'isRequired', e.target.checked)} />
+                            <label htmlFor={`req-${fIndex}`} className="text-xs text-gray-600">Required field</label>
+                          </div>
+                        </div>
+                        <button type="button" onClick={() => handleRemoveField(fIndex)} className="text-red-500 hover:text-red-700 p-1">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      {['Select', 'Radio', 'Checkbox'].includes(field.type) && (
+                        <div className="mt-3 pl-4 border-l-2 border-gray-200">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-medium text-gray-600">Options</span>
+                            <button type="button" onClick={() => handleAddOption(fIndex)} className="text-xs text-blue-600 hover:underline">
+                              + Add Option
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {field.options.map((opt, oIndex) => (
+                              <div key={oIndex} className="flex gap-2 items-center">
+                                <input required type="text" value={opt.name} onChange={(e) => handleOptionChange(fIndex, oIndex, 'name', e.target.value)} placeholder="Option name" className="flex-1 border border-gray-300 rounded p-1 text-xs" />
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-gray-500">+₹</span>
+                                  <input type="number" value={opt.priceModifier} onChange={(e) => handleOptionChange(fIndex, oIndex, 'priceModifier', Number(e.target.value))} className="w-20 border border-gray-300 rounded p-1 text-xs" />
+                                </div>
+                                <button type="button" onClick={() => handleRemoveOption(fIndex, oIndex)} className="text-gray-400 hover:text-red-500">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {formData.customizationFields.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4">No customization fields added yet.</p>
+                  )}
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">

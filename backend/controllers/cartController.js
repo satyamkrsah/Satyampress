@@ -56,7 +56,14 @@ const calculateCartTotals = async (cart) => {
 exports.getCart = async (req, res, next) => {
   try {
     let cart = await Cart.findOne({ user: req.user.id })
-      .populate('items.product', 'name images category gstRate minQuantity deliveryDays')
+      .populate({
+        path: 'items.product',
+        select: 'name thumbnail image images gallery category basePrice price gstRate minQuantity deliveryDays',
+        populate: [
+          { path: 'thumbnail', select: 'secureUrl url originalName' },
+          { path: 'gallery', select: 'secureUrl url originalName' }
+        ]
+      })
       .populate('coupon', 'code discountType discountValue');
 
     if (!cart) {
@@ -77,16 +84,36 @@ exports.getCart = async (req, res, next) => {
 // @access  Private
 exports.addToCart = async (req, res, next) => {
   try {
-    const { product, quantity, customizations, designFile, specialInstructions } = req.body;
+    let { product, quantity, customizations, designFile, specialInstructions } = req.body;
 
-    const dbProduct = await Product.findById(product);
+    if (designFile === "") {
+        designFile = undefined;
+    }
+
+    const dbProduct = await Product.findById(product)
+      .populate('category')
+      .populate('thumbnail')
+      .populate('gallery');
     if (!dbProduct) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
 
     // Calculate final price based on basePrice and customizations
     let finalPrice = dbProduct.basePrice || 0;
-    if (customizations && dbProduct.customizations) {
+    
+    // Check if category has dynamic customizations
+    if (customizations && dbProduct.category && dbProduct.category.customizationFields) {
+      for (const [key, val] of Object.entries(customizations)) {
+        const field = dbProduct.category.customizationFields.find(f => f.name === key);
+        if (field && field.options) {
+          const opt = field.options.find(o => o.name === val);
+          if (opt && opt.priceModifier) {
+            finalPrice += opt.priceModifier;
+          }
+        }
+      }
+    } else if (customizations && dbProduct.customizations) {
+      // Backward compatibility for old hardcoded products
       const map = {
         paperSize: 'paperSizes',
         paperGsm: 'paperGsm',
@@ -129,17 +156,23 @@ exports.addToCart = async (req, res, next) => {
       cart.items.push({
         product,
         name: dbProduct.name,
-        image: dbProduct.thumbnail,
+        image: dbProduct.thumbnail?.secureUrl || dbProduct.thumbnail?.url || "",
         quantity,
         price: finalPrice,
         customizations,
-        designFile, // Matches schema field name
+        designFile: designFile || undefined, // Matches schema field name
         specialInstructions
       });
     }
 
     cart = await calculateCartTotals(cart);
     await cart.save();
+    cart = await Cart.findById(cart._id)
+  .populate(
+    'items.product',
+    'name thumbnail image images gallery category basePrice price gstRate minQuantity deliveryDays'
+  )
+  .populate('coupon', 'code discountType discountValue');
 
     res.status(200).json({
       success: true,

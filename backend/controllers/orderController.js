@@ -18,7 +18,13 @@ exports.createOrder = async (req, res, next) => {
     const { shippingAddress, billingAddress, paymentMethod, orderNotes } = req.body;
 
     // 1. Get user cart
-    const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    const cart = await Cart.findOne({ user: req.user.id }).populate({
+  path: 'items.product',
+  populate: [
+    { path: 'thumbnail' },
+    { path: 'gallery' }
+  ]
+});
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ success: false, error: 'No items in cart' });
@@ -33,7 +39,7 @@ exports.createOrder = async (req, res, next) => {
         quantity: item.quantity,
         price: item.price,
         gstRate: item.product.gstRate,
-        designFile: item.designFile,
+        designFile: item.designFile || undefined,
         specialInstructions: item.specialInstructions,
         customizations: item.customizations
       };

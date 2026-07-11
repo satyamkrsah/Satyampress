@@ -22,6 +22,10 @@ const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Checkout = lazy(() => import('./pages/Checkout'));
+const PremiumCollection = lazy(() => import('./pages/PremiumCollection'));
+const BestSellers = lazy(() => import('./pages/BestSellers'));
+const NewArrivals = lazy(() => import('./pages/NewArrivals'));
+const FeaturedProducts = lazy(() => import('./pages/FeaturedProducts'));
 // Account Pages
 const AccountLayout = lazy(() => import('./layouts/AccountLayout'));
 const AccountDashboard = lazy(() => import('./pages/account/AccountDashboard'));
@@ -80,6 +84,10 @@ const App = () => {
                     <Route path="/" element={<PublicLayout />}>
                       <Route index element={<Home />} />
                       <Route path="products" element={<Products />} />
+                      <Route path="premium" element={<PremiumCollection />} />
+                      <Route path="best-sellers" element={<BestSellers />} />
+                      <Route path="new-arrivals" element={<NewArrivals />} />
+                      <Route path="featured" element={<FeaturedProducts />} />
                       <Route path="product/:id" element={<ProductDetail />} />
                       <Route path="cart" element={<Cart />} />
                       <Route path="checkout" element={<Checkout />} />

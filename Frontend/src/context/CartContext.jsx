@@ -34,7 +34,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (product, quantity = 1, customizations = {}, _price, designFile = '', specialInstructions = '') => {
+  const addToCart = async (product, quantity = 1, customizations = {}, _price, designFile = null, specialInstructions = '') => {
     if (!isAuthenticated) {
       toast.error('Please login to add items to cart');
       return;

@@ -74,17 +74,19 @@ const ProductSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    isFeatured: {
+    showInMainCatalog: {
       type: Boolean,
-      default: false
+      default: true
     },
-    isBestSeller: {
-      type: Boolean,
-      default: false
-    },
-    isNewArrival: {
-      type: Boolean,
-      default: false
+
+    showInMainCatalog: {
+  type: Boolean,
+  default: true
+},
+    collectionType: {
+      type: String,
+      enum: ['none', 'premium', 'bestSeller', 'newArrival', 'featured'],
+      default: 'none'
     },
     // Printing Customizations
     customizations: {
