@@ -39,20 +39,13 @@ const upload = multer({
 });
 
 // Routes
-router.route('/signature')
-  .get(protect, getSignature);
+router.get('/signature', protect, getSignature);
+router.post('/metadata', protect, saveMetadata);
+router.get('/myuploads', protect, getMyMediaFiles);
 
-router.route('/metadata')
-  .post(protect, saveMetadata);
+router.post('/', protect, upload.single('file'), uploadFile);
+router.get('/', protect, authorize('admin'), getMediaFiles);
 
-router.route('/myuploads')
-  .get(protect, getMyMediaFiles);
-
-router.route('/')
-  .post(protect, upload.single('file'), uploadFile)
-  .get(protect, authorize('admin'), getMediaFiles);
-
-router.route('/:id')
-  .delete(protect, deleteMediaFile);
+router.delete('/:id', protect, deleteMediaFile);
 
 module.exports = router;

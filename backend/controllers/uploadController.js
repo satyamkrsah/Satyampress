@@ -8,7 +8,7 @@ const Media = require('../models/Media');
 exports.getSignature = (req, res) => {
   try {
     // 1. Timestamp Drift Fix: Generate timestamp ONCE on the backend
-    const timestamp = Math.round(new Date().getTime() / 1000);
+    const timestamp = Math.floor(Date.now() / 1000);
     
     const { uploadType } = req.query;
     const folder = `satyampress/${uploadType || 'design_file'}`;
