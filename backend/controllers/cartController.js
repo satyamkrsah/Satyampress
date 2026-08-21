@@ -2,6 +2,25 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
 
+const cartPopulateOptions = [
+  {
+    path: 'items.product',
+    select: 'name thumbnail gallery category basePrice price gstRate minQuantity deliveryDays',
+    populate: [
+      { path: 'thumbnail', select: 'secureUrl publicId originalName' },
+      { path: 'gallery', select: 'secureUrl publicId originalName' }
+    ]
+  },
+  {
+    path: 'items.designFile',
+    select: 'secureUrl originalName mimeType publicId size createdAt'
+  },
+  {
+    path: 'coupon',
+    select: 'code discountType discountValue'
+  }
+];
+
 // Helper to calculate totals
 const calculateCartTotals = async (cart) => {
   let subTotal = 0;
@@ -56,15 +75,7 @@ const calculateCartTotals = async (cart) => {
 exports.getCart = async (req, res, next) => {
   try {
     let cart = await Cart.findOne({ user: req.user.id })
-      .populate({
-        path: 'items.product',
-        select: 'name thumbnail image images gallery category basePrice price gstRate minQuantity deliveryDays',
-        populate: [
-          { path: 'thumbnail', select: 'secureUrl url originalName' },
-          { path: 'gallery', select: 'secureUrl url originalName' }
-        ]
-      })
-      .populate('coupon', 'code discountType discountValue');
+      .populate(cartPopulateOptions);
 
     if (!cart) {
       cart = await Cart.create({ user: req.user.id, items: [] });
@@ -92,8 +103,8 @@ exports.addToCart = async (req, res, next) => {
 
     const dbProduct = await Product.findById(product)
       .populate('category')
-      .populate('thumbnail')
-      .populate('gallery');
+      .populate({ path: 'thumbnail', select: 'secureUrl publicId originalName' })
+      .populate({ path: 'gallery', select: 'secureUrl publicId originalName' });
     if (!dbProduct) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
@@ -156,7 +167,6 @@ exports.addToCart = async (req, res, next) => {
       cart.items.push({
         product,
         name: dbProduct.name,
-        image: dbProduct.thumbnail?.secureUrl || dbProduct.thumbnail?.url || "",
         quantity,
         price: finalPrice,
         customizations,
@@ -167,12 +177,8 @@ exports.addToCart = async (req, res, next) => {
 
     cart = await calculateCartTotals(cart);
     await cart.save();
-    cart = await Cart.findById(cart._id)
-  .populate(
-    'items.product',
-    'name thumbnail image images gallery category basePrice price gstRate minQuantity deliveryDays'
-  )
-  .populate('coupon', 'code discountType discountValue');
+    
+    cart = await Cart.findById(cart._id).populate(cartPopulateOptions);
 
     res.status(200).json({
       success: true,
@@ -207,6 +213,8 @@ exports.updateCartItem = async (req, res, next) => {
       cart = await calculateCartTotals(cart);
       await cart.save();
       
+      cart = await Cart.findById(cart._id).populate(cartPopulateOptions);
+      
       return res.status(200).json({ success: true, data: cart });
     } else {
       return res.status(404).json({ success: false, error: 'Item not found in cart' });
@@ -231,6 +239,8 @@ exports.removeCartItem = async (req, res, next) => {
     
     cart = await calculateCartTotals(cart);
     await cart.save();
+    
+    cart = await Cart.findById(cart._id).populate(cartPopulateOptions);
 
     res.status(200).json({
       success: true,
@@ -258,6 +268,8 @@ exports.applyCoupon = async (req, res, next) => {
       cart.coupon = null;
       cart = await calculateCartTotals(cart);
       await cart.save();
+      
+      cart = await Cart.findById(cart._id).populate(cartPopulateOptions);
       return res.status(200).json({ success: true, data: cart });
     }
 
@@ -278,6 +290,8 @@ exports.applyCoupon = async (req, res, next) => {
     cart.coupon = coupon._id;
     cart = await calculateCartTotals(cart);
     await cart.save();
+    
+    cart = await Cart.findById(cart._id).populate(cartPopulateOptions);
 
     res.status(200).json({
       success: true,

@@ -7,9 +7,6 @@ const OrderItemSchema = new mongoose.Schema({
     required: true
   },
   name: { type: String, required: true },
-  image: {
-    type: String
-  },
   quantity: {
     type: Number,
     required: true
@@ -59,7 +56,7 @@ const OrderSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       required: true,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
+      enum: ['pending', 'completed', 'failed', 'refunded', 'refund_pending'],
       default: 'pending'
     },
     paymentDetails: {
@@ -70,7 +67,7 @@ const OrderSchema = new mongoose.Schema(
     orderStatus: {
       type: String,
       required: true,
-      enum: ['pending', 'confirmed', 'printing', 'ready_for_dispatch', 'shipped', 'delivered', 'cancelled', 'refunded'],
+      enum: ['pending', 'confirmed', 'printing', 'packed', 'ready_for_dispatch', 'shipped', 'delivered', 'cancelled', 'refunded'],
       default: 'pending'
     },
     timeline: [
@@ -112,7 +109,11 @@ const OrderSchema = new mongoose.Schema(
     invoiceNumber: {
       type: String,
       unique: true
-    }
+    },
+    trackingNumber: String,
+    paymentReference: String,
+    cancelReason: String,
+    cancelledAt: Date
   },
   {
     timestamps: true

@@ -60,16 +60,10 @@ const Cart = () => {
               <ul className="divide-y divide-gray-100">
                 {cartItems.map((item) => {
                   const product = item.product || {};
-                  console.log("Cart Item =>", item);
-  console.log("Product =>", product);
-  console.log("Thumbnail =>", product.thumbnail);
-  console.log("Image =>", product.image);
-  console.log("Images =>", product.images);
-                  const imageUrl =
+                  const image =
                     product?.thumbnail?.secureUrl ||
-                    product?.thumbnail?.url ||
-                    product?.image ||
-                    "/images/no-image.png";
+                    product?.gallery?.[0]?.secureUrl ||
+                    "/placeholder.png";
 
                   return (
                     <motion.li
@@ -82,12 +76,9 @@ const Cart = () => {
                       <div className="col-span-1 sm:col-span-6 flex gap-4">
                         <div className="h-20 w-20 shrink-0 overflow-hidden bg-white dark:bg-black transition-colors duration-300 border border-black dark:border-white dark:border-black dark:border-white transition-colors duration-300">
                           <img
-                            src={imageUrl}
-                            alt={product.name}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.target.src = "/images/no-image.png";
-                            }}
+                            src={image}
+                            alt={product?.name}
+                            className="w-24 h-24 object-cover rounded"
                           />
                         </div>
                         <div className="flex flex-col justify-center">

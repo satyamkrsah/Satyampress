@@ -39,9 +39,9 @@ exports.downloadInvoice = async (req, res, next) => {
       .fontSize(20)
       .text('Satyam Printing Press', 50, 57)
       .fontSize(10)
-      .text('123 Printing Lane', 200, 50, { align: 'right' })
-      .text('New Delhi, DL 110001', 200, 65, { align: 'right' })
-      .text('Phone: +91 9876543210', 200, 80, { align: 'right' })
+      .text('Garhpura, Begusarai', 200, 50, { align: 'right' })
+      .text('Bihar, 848204', 200, 65, { align: 'right' })
+      .text('Phone: +91 84097*****', 200, 80, { align: 'right' })
       .moveDown();
 
     // Line
@@ -56,7 +56,9 @@ exports.downloadInvoice = async (req, res, next) => {
       .fontSize(10)
       .text(`Invoice Number: ${order.invoiceNumber}`, 50, 160)
       .text(`Invoice Date: ${new Date(order.createdAt).toLocaleDateString()}`, 50, 175)
-      .text(`Order Status: ${order.orderStatus.toUpperCase()}`, 50, 190);
+      .text(`Order Status: ${order.orderStatus.toUpperCase()}`, 50, 190)
+      .text(`Payment Method: ${order.paymentMethod.toUpperCase()}`, 50, 205)
+      .text(`Payment Status: ${order.paymentStatus.toUpperCase()}`, 50, 220);
 
     // Customer details
     const shipping = order.shippingAddress;
@@ -69,10 +71,10 @@ exports.downloadInvoice = async (req, res, next) => {
       .text(`${shipping.city}, ${shipping.state} ${shipping.zipCode}`, 300, 175)
       .text(`Phone: ${shipping.phoneNumber}`, 300, 190);
 
-    doc.moveTo(50, 220).lineTo(550, 220).stroke();
+    doc.moveTo(50, 240).lineTo(550, 240).stroke();
 
     // Table Header
-    let invoiceTableTop = 250;
+    let invoiceTableTop = 270;
     doc.font('Helvetica-Bold');
     doc.text('Item', 50, invoiceTableTop);
     doc.text('Customizations', 200, invoiceTableTop);

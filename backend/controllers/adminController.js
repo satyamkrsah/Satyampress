@@ -4,6 +4,21 @@ const User = require('../models/User');
 const { parse } = require('json2csv');
 const { queueNotification } = require('../utils/notifier');
 
+const adminPopulateOptions = [
+  {
+    path: 'items.product',
+    select: 'name thumbnail gallery category',
+    populate: [
+      { path: 'thumbnail', select: 'secureUrl publicId originalName' },
+      { path: 'gallery', select: 'secureUrl publicId originalName' }
+    ]
+  },
+  {
+    path: 'items.designFile',
+    select: 'secureUrl originalName mimeType publicId size createdAt'
+  }
+];
+
 // @desc    Get dashboard stats
 // @route   GET /api/admin/dashboard
 // @access  Private/Admin
@@ -35,7 +50,7 @@ exports.getDashboardStats = async (req, res, next) => {
       Order.countDocuments({ orderStatus: 'cancelled' }),
       User.countDocuments({ role: 'customer' }),
       Product.countDocuments(),
-      Order.find().sort('-createdAt').limit(10).populate('user', 'name email'),
+      Order.find().sort('-createdAt').limit(10).populate('user', 'name email').populate(adminPopulateOptions),
       Product.find({ $expr: { $lte: ['$stock', '$lowStockThreshold'] } }).limit(10).select('name stock lowStockThreshold images'),
       Order.aggregate([
         { $match: { orderStatus: { $nin: ['cancelled', 'refunded', 'rejected'] } } },
@@ -117,7 +132,8 @@ exports.getRecentOrders = async (req, res, next) => {
     const orders = await Order.find()
       .sort('-createdAt')
       .limit(10)
-      .populate('user', 'name email');
+      .populate('user', 'name email')
+      .populate(adminPopulateOptions);
 
     res.status(200).json({
       success: true,
@@ -135,7 +151,7 @@ exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { orderStatus, adminNotes, estimatedDeliveryDate } = req.body;
     
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate(adminPopulateOptions);
 
     if (!order) {
       return res.status(404).json({ success: false, error: 'Order not found' });
@@ -143,6 +159,23 @@ exports.updateOrderStatus = async (req, res, next) => {
 
     if (orderStatus && orderStatus !== order.orderStatus) {
       const previousStatus = order.orderStatus;
+      
+      const statusFlow = ['pending', 'confirmed', 'printing', 'packed', 'shipped', 'delivered'];
+      const prevIndex = statusFlow.indexOf(previousStatus);
+      const newIndex = statusFlow.indexOf(orderStatus);
+
+      if (orderStatus !== 'cancelled' && orderStatus !== 'refunded') {
+        if (newIndex === -1) {
+          return res.status(400).json({ success: false, error: 'Invalid status' });
+        }
+        if (newIndex <= prevIndex) {
+          return res.status(400).json({ success: false, error: 'Cannot go backward in status flow' });
+        }
+        if (newIndex > prevIndex + 1 && prevIndex !== -1) {
+          return res.status(400).json({ success: false, error: 'Cannot skip stages in status flow' });
+        }
+      }
+
       order.orderStatus = orderStatus;
       
       order.timeline.push({ 

@@ -67,12 +67,11 @@ const PaymentSchema = new mongoose.Schema(
 );
 
 // Generate custom paymentId before save if not present
-PaymentSchema.pre('save', function(next) {
-  if (!this.paymentId) {
-    this.paymentId = `PAY-${Math.floor(100000 + Math.random() * 900000)}`;
-  }
-  next();
-});
+// PaymentSchema.pre("save", function () {
+//   if (!this.paymentId) {
+//     this.paymentId = `PAY-${Math.floor(100000 + Math.random() * 900000)}`;
+//   }
+// });
 
 PaymentSchema.index({ order: 1 });
 PaymentSchema.index({ customer: 1 });

@@ -110,6 +110,12 @@ const Checkout = () => {
         }
 
         // Online Payment Flow
+        if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
+          toast.error("Razorpay Key is missing");
+          setLoading(false);
+          return;
+        }
+
         const res = await loadRazorpayScript();
         if (!res) {
           toast.error('Razorpay SDK failed to load');
@@ -124,8 +130,13 @@ const Checkout = () => {
           return;
         }
 
+        console.log("Razorpay Key:", import.meta.env.VITE_RAZORPAY_KEY_ID);
+        console.log("Payment Response:", paymentRes.data);
+
+        const selectedAddress = addresses.find(a => a._id === selectedAddressId) || newAddress;
+
         const options = {
-          key: process.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_mockkey',
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: paymentRes.data.data.amount,
           currency: paymentRes.data.data.currency,
           name: 'Satyam Printing Press',
@@ -138,29 +149,49 @@ const Checkout = () => {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature
               });
+              
+              console.log("Verify Response:", verifyRes.data);
+
               if (verifyRes.data.success) {
                 toast.success('Payment successful and order confirmed!');
                 clearCart();
                 navigate('/profile/orders');
+              } else {
+                toast.error('Payment verification failed');
+                setLoading(false);
               }
             } catch (err) {
               toast.error('Payment verification failed');
-              navigate('/profile/orders');
+              setLoading(false);
             }
           },
           prefill: {
-            name: newAddress.fullName || 'Customer',
-            email: 'customer@example.com',
-            contact: newAddress.phoneNumber || '9999999999'
+            name: selectedAddress.fullName || '',
+            email: selectedAddress.email || '', 
+            contact: selectedAddress.phoneNumber || ''
           },
-          theme: { color: '#BF953F' }
+          notes: {
+            address: selectedAddress.street || ''
+          },
+          theme: { color: '#BF953F' },
+          retry: {
+            enabled: true
+          },
+          modal: {
+            ondismiss: function () {
+              toast.error('Payment cancelled');
+              setLoading(false);
+            }
+          }
         };
+
+        console.log("Razorpay Options:", options);
 
         const paymentObject = new window.Razorpay(options);
         paymentObject.on('payment.failed', function (response) {
-          toast.error('Payment failed. You can retry from your orders page.');
-          clearCart();
-          navigate('/profile/orders');
+          console.log("Payment Failed Response:", response);
+          toast.error('Payment failed');
+          setLoading(false);
         });
         
         paymentObject.open();

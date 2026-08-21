@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Eye, Filter, CheckCircle, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 
 const AdminOrders = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,11 +139,9 @@ const AdminOrders = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 
-                      onClick={() => {
-                        window.open(`http://localhost:5000/api/orders/${order._id}/invoice`, '_blank');
-                      }}
+                      onClick={() => navigate(`/admin/orders/${order._id}`)}
                       className="text-gold hover:text-yellow-600 transition-colors p-1"
-                      title="Download Invoice"
+                      title="View Order Details"
                     >
                       <Eye className="h-5 w-5" />
                     </button>

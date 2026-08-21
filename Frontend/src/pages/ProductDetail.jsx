@@ -107,6 +107,9 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
+    let designFile = null;
+    const finalCustomizations = { ...customizations };
+
     // Validate required fields
     if (product.category?.customizationFields) {
       for (const field of product.category.customizationFields) {
@@ -117,10 +120,15 @@ const ProductDetail = () => {
             return;
           }
         }
+        
+        if (field.type === 'File Upload' && customizations[field.name]) {
+          designFile = customizations[field.name];
+          delete finalCustomizations[field.name]; // Remove from customizations so ObjectId doesn't render
+        }
       }
     }
 
-    addToCart(product, quantity, customizations, livePrice);
+    addToCart(product, quantity, finalCustomizations, livePrice, designFile);
     toast.success("Added to cart!");
   };
 

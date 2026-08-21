@@ -5,6 +5,21 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { queueNotification } = require('../utils/notifier');
 
+const orderPopulateOptions = [
+  {
+    path: 'items.product',
+    select: 'name thumbnail gallery category',
+    populate: [
+      { path: 'thumbnail', select: 'secureUrl publicId originalName' },
+      { path: 'gallery', select: 'secureUrl publicId originalName' }
+    ]
+  },
+  {
+    path: 'items.designFile',
+    select: 'secureUrl originalName mimeType publicId size createdAt'
+  }
+];
+
 // Helper to generate invoice number
 const generateInvoiceNumber = () => {
   return 'INV-' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -31,19 +46,16 @@ exports.createOrder = async (req, res, next) => {
     }
 
     // 2. Build order items array from cart items
-    const orderItems = cart.items.map(item => {
-      return {
-        product: item.product._id,
-        name: item.product.name,
-        image: item.product.images[0],
-        quantity: item.quantity,
-        price: item.price,
-        gstRate: item.product.gstRate,
-        designFile: item.designFile || undefined,
-        specialInstructions: item.specialInstructions,
-        customizations: item.customizations
-      };
-    });
+    const orderItems = cart.items.map(item => ({
+    product: item.product._id,
+    name: item.product.name,
+    quantity: item.quantity,
+    price: item.price,
+    gstRate: item.product.gstRate,
+    designFile: item.designFile ? (item.designFile._id || item.designFile) : undefined,
+    specialInstructions: item.specialInstructions,
+    customizations: item.customizations
+}));
 
     // 3. Create order
     const order = await Order.create({
@@ -66,13 +78,13 @@ exports.createOrder = async (req, res, next) => {
     // 4. (Removed) Inventory is now deducted upon Payment/Admin Confirmation
 
     // 5. Create Notification
-    await Notification.create({
-      user: req.user.id,
-      title: 'Order Placed Successfully',
-      message: `Your order #${order.invoiceNumber} has been placed successfully.`,
-      type: 'order_created',
-      relatedId: order._id
-    });
+   await Notification.create({
+  user: req.user.id,
+  title: 'Order Placed Successfully',
+  message: `Your order #${order.invoiceNumber} has been placed successfully.`,
+  type: 'new_order',
+  relatedId: order._id
+});
 
     // 5.5 Queue External Notifications
     const user = await User.findById(req.user.id);
@@ -119,7 +131,9 @@ exports.createOrder = async (req, res, next) => {
 // @access  Private
 exports.getMyOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user.id }).sort('-createdAt');
+    const orders = await Order.find({ user: req.user.id })
+      .sort('-createdAt')
+      .populate(orderPopulateOptions);
 
     res.status(200).json({
       success: true,
@@ -139,7 +153,8 @@ exports.getOrderById = async (req, res, next) => {
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
       .populate('shippingAddress')
-      .populate('billingAddress');
+      .populate('billingAddress')
+      .populate(orderPopulateOptions);
 
     if (!order) {
       return res.status(404).json({ success: false, error: 'Order not found' });
@@ -164,7 +179,7 @@ exports.getOrderById = async (req, res, next) => {
 // @access  Private
 exports.cancelOrder = async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate(orderPopulateOptions);
 
     if (!order) {
       return res.status(404).json({ success: false, error: 'Order not found' });
@@ -181,7 +196,14 @@ exports.cancelOrder = async (req, res, next) => {
     const previousStatus = order.orderStatus;
     
     order.orderStatus = 'cancelled';
-    order.timeline.push({ status: 'cancelled', note: 'Order cancelled by user' });
+    order.cancelReason = req.body.cancelReason || 'Cancelled by user';
+    order.cancelledAt = new Date();
+    
+    if (order.paymentStatus === 'completed') {
+      order.paymentStatus = 'refund_pending';
+    }
+
+    order.timeline.push({ status: 'cancelled', note: order.cancelReason });
     await order.save();
 
     // Revert stock only if it was already confirmed (and thus deducted)
