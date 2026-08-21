@@ -2,6 +2,68 @@ const cloudinary = require('../utils/cloudinary');
 const streamifier = require('streamifier');
 const Media = require('../models/Media');
 
+// @desc    Generate Cloudinary upload signature for client-side uploads
+// @route   GET /api/upload/signature
+// @access  Private
+exports.getSignature = (req, res) => {
+  try {
+    // 1. Timestamp Drift Fix: Generate timestamp ONCE on the backend
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    
+    const { uploadType } = req.query;
+    const folder = `satyampress/${uploadType || 'design_file'}`;
+
+    // 2. Payload Exclusion Fix: Do NOT include 'file' or 'api_key' in paramsToSign
+    const paramsToSign = {
+      folder: folder,
+      timestamp: timestamp,
+    };
+
+    // 3. SDK Signature Method Fix: Use official SDK method for automatic alphabetical sorting
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    res.status(200).json({
+      success: true,
+      signature,
+      timestamp,
+      folder,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Save media metadata after client-side Cloudinary upload
+// @route   POST /api/upload/metadata
+// @access  Private
+exports.saveMetadata = async (req, res) => {
+  try {
+    const { publicId, secureUrl, originalName, mimeType, size, uploadType } = req.body;
+
+    const media = await Media.create({
+      publicId,
+      secureUrl,
+      originalName,
+      mimeType,
+      size,
+      uploadedBy: req.user.id,
+      uploadType: uploadType || 'design_file'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: media
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
 // @desc    Upload file to Cloudinary and store metadata
 // @route   POST /api/upload
 // @access  Private

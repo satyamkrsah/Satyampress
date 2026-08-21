@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../api/axios';
+import axios from 'axios';
 
 const FileUpload = ({ 
   onUploadSuccess, 
@@ -38,12 +39,28 @@ const FileUpload = ({
   const uploadFile = async (selectedFile) => {
     setUploading(true);
     setProgress(0);
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('uploadType', uploadType);
-
+    
     try {
-      const res = await api.post('/upload', formData, {
+      // 1. Get the signature and exact matched parameters from backend
+      const sigRes = await api.get(`/upload/signature?uploadType=${uploadType}`);
+      const { signature, timestamp, folder, apiKey, cloudName } = sigRes.data;
+
+      // 2. Construct FormData for Cloudinary
+      const formData = new FormData();
+      
+      // The file must be appended to formData, but was purposefully EXCLUDED from backend signature
+      formData.append('file', selectedFile); 
+      
+      // Append the EXACT parameters used during backend signing
+      formData.append('folder', folder);
+      formData.append('timestamp', timestamp); 
+      formData.append('api_key', apiKey);
+      formData.append('signature', signature);
+
+      // 3. Send directly to Cloudinary API using standard axios (not api) to avoid injecting auth headers
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+      
+      const uploadRes = await axios.post(cloudinaryUrl, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -53,12 +70,25 @@ const FileUpload = ({
         },
       });
 
-      if (res.data.success) {
-        setUploadedMedia(res.data.data);
-        if (onUploadSuccess) onUploadSuccess(res.data.data);
+      const cloudinaryData = uploadRes.data;
+
+      // 4. Save metadata back to our database
+      const metadataRes = await api.post('/upload/metadata', {
+        publicId: cloudinaryData.public_id,
+        secureUrl: cloudinaryData.secure_url,
+        originalName: selectedFile.name,
+        mimeType: selectedFile.type,
+        size: selectedFile.size,
+        uploadType: uploadType
+      });
+
+      if (metadataRes.data.success) {
+        setUploadedMedia(metadataRes.data.data);
+        if (onUploadSuccess) onUploadSuccess(metadataRes.data.data);
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Upload failed. Please try again.');
+      console.error('Upload Error:', err.response?.data || err);
+      setError(err.response?.data?.error?.message || err.response?.data?.error || 'Upload failed. Please try again.');
       setFile(null);
     } finally {
       setUploading(false);

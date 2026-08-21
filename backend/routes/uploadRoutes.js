@@ -4,7 +4,9 @@ const {
   uploadFile,
   getMediaFiles,
   deleteMediaFile,
-  getMyMediaFiles
+  getMyMediaFiles,
+  getSignature,
+  saveMetadata
 } = require('../controllers/uploadController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -37,6 +39,12 @@ const upload = multer({
 });
 
 // Routes
+router.route('/signature')
+  .get(protect, getSignature);
+
+router.route('/metadata')
+  .post(protect, saveMetadata);
+
 router.route('/myuploads')
   .get(protect, getMyMediaFiles);
 
