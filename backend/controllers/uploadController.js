@@ -10,8 +10,17 @@ exports.getSignature = (req, res) => {
     // 1. Timestamp Drift Fix: Generate timestamp ONCE on the backend
     const timestamp = Math.floor(Date.now() / 1000);
     
-    const { uploadType } = req.query;
-    const folder = `satyampress/${uploadType || 'design_file'}`;
+    // Strictly enforce the folder name as required
+    const folder = `satyampress/design_file`;
+
+    const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim();
+    const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+    const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim();
+
+    if (!apiSecret || !cloudName || !apiKey) {
+      console.error("🚨 [Cloudinary API] Server misconfiguration: Credentials missing or invalid.");
+      return res.status(500).json({ success: false, error: "Server upload configuration error." });
+    }
 
     // 2. Payload Exclusion Fix: Do NOT include 'file' or 'api_key' in paramsToSign
     const paramsToSign = {
@@ -22,7 +31,7 @@ exports.getSignature = (req, res) => {
     // 3. SDK Signature Method Fix: Use official SDK method for automatic alphabetical sorting
     const signature = cloudinary.utils.api_sign_request(
       paramsToSign,
-      process.env.CLOUDINARY_API_SECRET
+      apiSecret
     );
 
     res.status(200).json({
@@ -30,8 +39,8 @@ exports.getSignature = (req, res) => {
       signature,
       timestamp,
       folder,
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-      apiKey: process.env.CLOUDINARY_API_KEY
+      cloudName: cloudName,
+      apiKey: apiKey
     });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
