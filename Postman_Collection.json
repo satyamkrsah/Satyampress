@@ -94,7 +94,7 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:5000"
+			"value": "https://satyampress.onrender.com"
 		}
 	]
 }

@@ -1,7 +1,7 @@
 const axios = require('axios');
 (async () => {
   try {
-    const res = await axios.put('http://localhost:5000/api/categories/6a4fefa9b049234a9653d5a9', {
+    const res = await axios.put('https://satyampress.onrender.com/api/categories/6a4fefa9b049234a9653d5a9', {
       name: 'Wedding Cards',
       description: 'Premium wedding invitation card printing',
       status: 'active',

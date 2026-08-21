@@ -25,5 +25,5 @@ The system requires several critical environment variables to function correctly
 
 | Variable | Description | Example |
 | :--- | :--- | :--- |
-| `VITE_API_URL` | Base URL pointing to the backend API | `http://localhost:5000/api` |
+| | `VITE_API_BASE_URL` | Base URL pointing to the backend API | `https://satyampress.onrender.com/api` |
 | `VITE_RAZORPAY_KEY_ID` | Public Razorpay key for frontend widget | `rzp_test_xxxxxx` |
