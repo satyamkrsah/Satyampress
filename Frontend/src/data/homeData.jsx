@@ -1,6 +1,8 @@
+import Firstimg from '../assets/firstimg.png';
+
 export const heroSlides = [
   {
-    image: 'https://jimitcard.com/wp-content/uploads/2026/05/Gemini_Generated_Image_xx5pj0xx5pj0xx5p.png',
+    image: Firstimg,
     title1: 'Every Celebration',
     title2: 'Starts Here',
     subtitle: 'Premium Printing Under One Roof',
