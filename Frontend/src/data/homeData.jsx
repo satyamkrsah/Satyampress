@@ -137,7 +137,7 @@ export const testimonials = [
 
 export const announcementMessages = [
   '10,000+ Happy Customers',
-  'Premium Quality Printing Since 1995',
+  'Premium Quality Printing Since 2010',
   'Free Delivery on Orders Above ₹1,000',
   'Same Day Digital Proofs Available',
 ];
