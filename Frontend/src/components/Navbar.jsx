@@ -39,11 +39,20 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   
   const userMenuRef = useRef(null);
   const notificationRef = useRef(null);
   
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -72,10 +81,10 @@ const Navbar = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 transition-colors duration-300">
       <AnnouncementBar />
 
-      <nav className="glass sticky top-0 z-50 transition-colors duration-300">
+      <nav className={`${isScrolled ? 'glass shadow-sm dark:bg-background-dark/90' : 'bg-transparent'} transition-all duration-300 w-full`}>
         <div className="w-full px-4 sm:px-8 lg:px-12">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo - Left Side */}
@@ -83,7 +92,7 @@ const Navbar = () => {
               <img
                 src={logo}
                 alt="Satyam Printing Press"
-                className="h-12 md:h-16 w-auto"
+                className="h-12 md:h-16 w-auto drop-shadow-[1px_3px_2px_rgba(1,0,0,0.95)]"
               />
             </Link>
 

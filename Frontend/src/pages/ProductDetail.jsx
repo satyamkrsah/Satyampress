@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   Star,
@@ -19,6 +19,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const { products, loading, error } = useProduct();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [customizations, setCustomizations] = useState({});
   const [livePrice, setLivePrice] = useState(0);
@@ -117,7 +118,7 @@ const ProductDetail = () => {
           const val = customizations[field.name];
           if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
             toast.error(`Please select a value for ${field.name}`);
-            return;
+            return false;
           }
         }
         
@@ -130,6 +131,14 @@ const ProductDetail = () => {
 
     addToCart(product, quantity, finalCustomizations, livePrice, designFile);
     toast.success("Added to cart!");
+    return true;
+  };
+
+  const handleBuyNow = () => {
+    const success = handleAddToCart();
+    if (success) {
+      navigate("/checkout");
+    }
   };
 
   if (loading) {
@@ -404,6 +413,12 @@ const ProductDetail = () => {
                 className="btn-gold flex-1 h-12 flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="h-5 w-5" /> Add to Cart
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 h-12 flex items-center justify-center gap-2 bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 transition-colors duration-300 font-medium"
+              >
+                Buy Now
               </button>
             </div>
 

@@ -78,7 +78,8 @@ const Home = () => {
       </Helmet>
 
       {/* Hero */}
-      <section className="relative h-[70vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
+      <div className="h-screen flex flex-col -mt-[96px] md:-mt-[116px]">
+        <section className="relative flex-1 flex items-center justify-center overflow-hidden pt-[96px] md:pt-[116px]">
         {heroSlides.map((slide, index) => (
           <div
             key={index}
@@ -127,6 +128,7 @@ const Home = () => {
           ))}
         </div>
       </section>
+      </div>
 
       {/* Shop by Collection */}
       <section className="py-16 md:py-24 bg-white dark:bg-background-dark transition-colors duration-300">

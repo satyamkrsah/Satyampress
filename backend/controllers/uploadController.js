@@ -28,6 +28,14 @@ exports.getSignature = (req, res) => {
       timestamp: timestamp,
     };
 
+    // Safe debugging log (NEVER logs the API secret itself)
+    console.log("[Cloudinary Debug] Generating Signature");
+    console.log(`- Folder: ${folder}`);
+    console.log(`- Timestamp: ${timestamp}`);
+    console.log(`- Cloud Name: ${cloudName}`);
+    console.log(`- API Key: ${apiKey}`);
+    console.log(`- API Secret Present: ${!!apiSecret} (Length: ${apiSecret.length})`);
+    
     // 3. SDK Signature Method Fix: Use official SDK method for automatic alphabetical sorting
     const signature = cloudinary.utils.api_sign_request(
       paramsToSign,
